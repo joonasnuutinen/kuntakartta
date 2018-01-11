@@ -1,0 +1,22 @@
+{
+  "name": "kuntakartta",
+  "version": "2.0.0",
+  "description": "Kuntakartta näyttää kunnan palvelut ja yritykset kartalla.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/joonasnuutinen/kuntakartta.git"
+  },
+  "author": "Joonas Nuutinen",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/joonasnuutinen/kuntakartta/issues"
+  },
+  "homepage": "https://github.com/joonasnuutinen/kuntakartta#readme",
+  "dependencies": {
+    "express": "^4.16.2"
+  }
+}
