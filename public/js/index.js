@@ -91,62 +91,6 @@ $(function() {
     
     renderMap();
   } );
-  
-  /*var targets = [
-    new Target('Hyvinvointikeskus Toivonlahti', 'keskusta', [19.6, 23.2], 'Henrikintie 4', 'neuvonta 0400 357200', null, 'www.linklife.fi', 'https://www.facebook.com/Hyvinvointikeskus-Toivonlahti-148225018603293/', false),
-    new Target('Lähimmäispalvelukeskus Iljala', 'keskusta', [28.6, 36.6], 'Kappalaisentie 2', '040 7787502', null, null, 'https://www.facebook.com/L%C3%A4himm%C3%A4ispalvelukeskus-Iljala-ry-1751284958459013/', false),
-		new Target('Hermannin Viinitorni', 'keskusta', [30.6, 35.2], 'Kappalaisentie 2', '020 7789233', 'Auki kesäisin.', null, 'https://www.facebook.com/pages/Hermannin-Viinitorni/233058680063731', false),
-    new Target('Hermannin Viinitila', 'keskusta', [42.1, 51.4], 'Käymiskuja 1', '020 7789230', null, 'hermannin.fi', 'https://www.facebook.com/hermanninviinitila/', false),
-    new Target('Fysiokeskus Ikiliikkuja', 'keskusta', [40, 27.6], 'Kauppatie 51', '0400 982942', null, null, 'https://www.facebook.com/Fysiokeskus-Ikiliikkuja-Oy-1119224178097452/', false),
-    new Target('Kauneus- ja jalkahoitola Aune Matero', 'keskusta', [41.1, 26.7], 'Kauppatie 49', '040 5373935', null, null, null, false),
-    new Target('Hieronta- ja liikuntapalvelut Saija Lauronen', 'keskusta', [44.4, 25.4], 'Kalevalantie 25', '045 2140804', null, 'www.hierontajaliikuntapalvelut.com', 'https://www.facebook.com/hierontajaliikunta/', false),
-    new Target('Ravintola Taj Mahal', 'keskusta', [44.4, 26], 'Kalevalantie 25', '046 9053245, 040 1473341', 'Avoinna ma–su 10.00–22.00.', null, 'https://www.facebook.com/pages/Ravintola-Taj-Mahal/1665208343789804', false),
-    new Target('Ravintola Murginapirtti', 'keskusta', [44.4, 17.2], 'Katri Valan tie 1', '040 5848386', null, 'www.murginapirtti.fi', null, false),
-    new Target('Ilomantsin Fysikaalinen Hoitolaitos', 'keskusta', [47.1, 25.4], 'Kauppatie 32', '050 5522044', null, null, null, false),
-    new Target('Pogostan Kaluste', 'keskusta', [45.2, 26.8], 'Kalevalantie 23', '0400 150591', null, 'www.pogostankaluste.fi', null, false),
-    new Target('Ilomantsin kirjakauppa', 'keskusta', [45.8, 27.4], 'Kalevalantie 21', '013 881844', null, null, null, false),
-    new Target('Fysio-Voimala', 'keskusta', [46.3, 27.9], 'Kalevalantie 21', '050 5591222', null, 'www.fysiovoimala.com', 'https://www.facebook.com/fysiovoimala/', false),
-    new Target('Karjalan Rakentajat', 'keskusta', [45.2, 29.5], 'Kalevalantie 22', '0400 174981', null, 'www.karjalanrakentajat.fi', null, false),
-    new Target('Sähköasennus Virtanen', 'keskusta', [45.2, 29.5], 'Kalevalantie 22', '045 1344264', null, 'www.sahkoasennusvirtanen.fi', 'https://www.facebook.com/sahkoasennus.virtanen.oy/', true),
-    new Target('Mantsin Kehys', 'keskusta', [47.6, 31.8], 'Kalevalantie 18 B', '013 881597', null, null, 'https://www.facebook.com/mantsinkehysoy/', false),
-    new Target('OP Vaara-Karjala', 'keskusta', [48.1, 32.7], 'Mantsintie 5', '010 256 3401', null, 'www.op.fi', 'https://www.facebook.com/OP.vaarakarjala', false),
-		new Target('Ilomantsin Nukke- ja nalletalo', 'keskusta', [48.9, 26.3], 'Kauppatie 30', '040 7787502', null, null, 'https://www.facebook.com/IlomantsinNukkeJaNalletalo/', false),
-		new Target('Pogostan Sanomat', 'keskusta', [52.08, 27.12], 'Kauppatie 29', '010 2308800', null, 'www.pogostansanomat.fi', 'https://www.facebook.com/PogostanSanomat/', false),
-    new Target('Ilomantsin Optiikka', 'keskusta', [50.8, 30.2], 'Mantsintie 1–3', '050 3038952', null, null, 'https://www.facebook.com/Ilomantsin-Optiikka-156705274507501/', false),
-    new Target('Taukoherkut', 'keskusta', [51.0, 30.6], 'Mantsintie 1–3', '040 5607325', null, 'www.taukoherkut.fi', 'https://www.facebook.com/taukoherkut/', false),
-    new Target('Ravintola Mendin', 'keskusta', [51.7, 30.7], 'Mantsintie 1–3', '013 881424', null, 'www.mendin.fi', 'https://www.facebook.com/ravintolamendin/', false),
-    new Target('Ilomantsin apteekki', 'keskusta', [47.7, 34.1], 'Mantsintie 8', '013 881424', null, 'www.ilomantsinapteekki.fi', null, false),
-    new Target('Tili- ja kiinteistötoimisto Tili-Talo', 'keskusta', [50.2, 34.7], 'Kalevalantie 14', '040 3000720', null, 'www.tilitalo.fi', null, false),
-    new Target('Jalkahoitola ElämysMantsi', 'keskusta', [50, 34.7], 'Kalevalantie 14', '040 5076623', null, null, 'https://www.facebook.com/Elämysmantsi-Oy-687472537943653/', false),
-    new Target('Pogostan Tietoverkkopalvelut', 'keskusta', [50.6, 35.2], 'Kalevalantie 14', '0400 101481', null, 'www.tietoverkkopalvelut.palvelee.fi', 'https://www.facebook.com/PogostanTVP/', false),
-    new Target('Hotelli Pogostan Hovi', 'keskusta', [51.5, 36.1], 'Kalevalantie 12', '040 1964496', null, 'www.hotellipogostanhovi.fi', 'https://www.facebook.com/hotellipogostanhovi/', false),
-    new Target('Ilomantsin Leipomo', 'keskusta', [52.4, 37.4], 'Kalevalantie 10', '013 881273', null, 'www.ilomantsinleipomo.fi', 'https://www.facebook.com/pages/Ilomantsin-Leipomo/133655036777235', false),
-    new Target('Kesport-Kenkä-Tekstiili Kortelainen', 'keskusta', [53.7, 36.0], 'Kalevalantie 11', '0400 264100', null, null, 'https://www.facebook.com/KesportIlomantsi/', false),
-    new Target('K-Market Ilomantsi', 'keskusta', [54.4, 36.7], 'Kalevalantie 11', '013 882733', null, null, 'https://www.facebook.com/K-market-Ilomantsi-1403093716680908/', false),
-    new Target('Kukka- ja hautauspalvelu Hassinen', 'keskusta', [55.1, 34.9], 'Mäkitie 10', '013 881017', null, null, null, false),
-    new Target('Salakan Puutarha ja Hautauspalvelu', 'keskusta', [57.7, 36.1], 'Ruskosillantie 8', '013 881055', null, 'www.salakanpuutarha.fi', 'https://www.facebook.com/Salakan-Puutarha-ja-hautauspalvelu-449221185115927/', false),
-    new Target('Mantsin Rauta-Sport Laatikainen', 'keskusta', [54.3, 39.7], 'Kalevalantie 6', '010 2291510', null, 'www.mantsinrautasport.fi', 'https://www.facebook.com/Mantsin-Rauta-Sport-Laatikainen-181789555279709/', false),
-    new Target('Neste Ilotuuli', 'keskusta', [57.3, 42.6], 'Kalevalantie 2', '0400 892877', null, null, 'https://www.facebook.com/profile.php?id=100010873772590', false),
-    new Target('Kone- ja Autotarvike Tanskanen', 'keskusta', [61.3, 45.6], 'Asematie 6', '0400 793973', null, null, 'https://www.facebook.com/Kone-ja-Autotarvike-Tanskanen-Oy-1546591075637043/', false),
-    new Target('Mottimaja', 'keskusta', [64.8, 6.2], 'Pogostantie 44', '013 220511', null, 'www.mottimaja.fi', 'https://www.facebook.com/Mottimaja-124271687660191/', false),
-    new Target('Ravintola Parppeinpirtti', 'keskusta', [59.1, 73.4], 'Parppeintie 4', '010 2399950', null, 'www.parppeinpirtti.fi', 'https://www.facebook.com/parppeinpirtti/', false),
-    new Target('Parppeinvaaran runokylä', 'keskusta', [61.6, 74.6], 'Parppeintie 4 C', '050 3758787', null, 'www.parppeinvaara.fi', 'https://www.facebook.com/Parppeinvaara/', false),
-    new Target('Anssilan Maatila', 'keskusta', [33.5, 98.6], 'Anssilantie 7', '040 5431526', null, 'www.anssila.fi', 'https://www.facebook.com/Anssila/', false),
-    new Target('Erämatkailukeskus Käenkoski', 'kunta', [51.1, 9.1], 'Naarvantie 194 B', '040 7396384', null, 'www.kaenkoski.info', null, false),
-    new Target('Taistelijan Talo', 'kunta', [89.2, 6.3], 'Hatuntie 387 A', '0400 273671', null, 'www.taistelijantalo.fi', 'https://www.facebook.com/taistelijantalo/', false),
-    new Target('ElämysMantsi', 'kunta', [14.9, 68.9], 'Ykshongantie 53', '040 5076623', null, 'www.elamysmantsi.fi', 'https://www.facebook.com/Elämysmantsi-Oy-687472537943653/', false),
-    new Target('Maukkulan Mustikkamäki', 'kunta', [41.2, 86.3], 'Toukka-ahontie 9', '040 7403002', 'Talvisin auki tilauksesta.', 'www.maukkulanmustikkamaki.fi', 'https://www.facebook.com/Maukkulan-Mustikkamäki-Oy-276660950347/', false),
-    
-    new Target('Arskan Kone Oy', 'kunta', [57.0, 61.3], 'Hatuntie 50 C', '0500 273422', null, 'www.arskankoneoy.fi', 'https://www.facebook.com/Arskan-Kone-Oy-946932635395345/', false),
-    
-    new Target('Kuuksenkaari', 'kunta', [57.8, 80.3], 'Kuuksenvaarantie 20', '050 5602844', null, 'www.kuuksenkaari.fi', null, false),
-    
-    new Target('MyllyMatti', 'kunta', [59.2, 64.3], 'Karvilantie 18', '040 7028933', null, 'www.myllymatti.com', 'https://www.facebook.com/myllymatti/', false),
-    
-    new Target('Möhkön Manta / Mantan Majatalo', 'kunta', [88.6, 78.4], 'Möhköntie 210 / Möhkönraitti 3 A', '040 8616373', null, 'www.mohkonmanta.net', 'https://www.facebook.com/Möhkön-Manta-281857105210435/', false),
-    new Target('Möhkön Ruukkimuseo', 'kunta', [90.9, 78], 'Möhköntie 209', '050 3428825', null, 'www.mohkonruukki.fi', 'https://www.facebook.com/mohkon.ruukki/', false),
-    new Target('Möhkön Rajakartano', 'kunta', [91.7, 77.7], 'Mustakorventie 11', '0500 649150', null, 'rajakartano.com', 'https://www.facebook.com/Möhkön-Rajakartano-549237105127366/', false)
-  ];*/
 }); // $(document).ready
 
 function renderMap() {

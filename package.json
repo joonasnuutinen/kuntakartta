@@ -4,7 +4,8 @@
   "description": "Kuntakartta näyttää kunnan palvelut ja yritykset kartalla.",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node ./bin/www",
+    "devstart": "nodemon ./bin/www"
   },
   "repository": {
     "type": "git",
@@ -18,5 +19,8 @@
   "homepage": "https://github.com/joonasnuutinen/kuntakartta#readme",
   "dependencies": {
     "express": "^4.16.2"
+  },
+  "devDependencies": {
+    "nodemon": "^1.14.11"
   }
 }
