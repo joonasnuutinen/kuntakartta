@@ -99,6 +99,10 @@ a {
   color: white;
 }
 
+.overlays {
+  display: none;
+}
+
 .phone, .address {
   white-space: nowrap;
 }
@@ -142,11 +146,6 @@ a {
   z-index: 3;
 }
 
-.index div {
-  padding-top: 2px;
-  text-align: center;
-}
-
 .index {
   display: block;
   background-color: #eb1c26;
@@ -156,7 +155,9 @@ a {
   width: 18px;
   height: 18px;
   cursor: pointer;
-  z-index: 1
+  z-index: 1;
+  padding-top: 2px;
+  text-align: center;
 }
 
 .index.active {
@@ -370,6 +371,11 @@ a {
 
 .kunta {
   background-color: #fed88f;
+}
+
+.ol-zoom {
+  bottom: .5em;
+  top: auto;
 }
 
 /*.list {
