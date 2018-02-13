@@ -1,4 +1,5 @@
 var ANIMATION_SPEED = 700;
+var IN_ZOOM = 16;
 
 var Map = {
   init: function(center, zoom, target) {
@@ -30,6 +31,7 @@ var Map = {
     .text( index )
     .click( function mapTargetClicked() {
       t.listObject.scrollTo( index );
+      t.map.getView().animate( { zoom: IN_ZOOM, center: pos } );
     } )
     .get( 0 );
     
