@@ -74,6 +74,11 @@ body {
 
 a {
   text-decoration: none;
+  color: rgb(0, 0, 238);
+}
+
+a:visited {
+  color: rgb(0, 0, 238);
 }
 
 .app {
@@ -130,7 +135,7 @@ a {
 
 .map .index {
   position: absolute;
-  margin: -9px 0 0 -9px;
+  /*margin: -9px 0 0 -9px;*/
 }
 
 .circle {
@@ -164,7 +169,7 @@ a {
   height: 28px;
   font-size: 17px;
   font-weight: bold;
-  margin: -14px 0 0 -14px;
+  /*margin: -14px 0 0 -14px;*/
   z-index: 1;
   border: 2px solid #fff;
   cursor: default;
@@ -359,14 +364,26 @@ a {
 .event-display {
   position: absolute;
   color: white;
-  background-color: #38b551;
+  background-color: #e84048;
   text-transform: uppercase;
   font-weight: 900;
-  padding: 0 5px;
+  padding: 1px 5px 0;
   letter-spacing: 1.1px;
-  margin-left: -100px;
-  margin-top: -10px;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+}
+
+.event-display:hover,
+.event-display.hover {
+  background-color: #e84048;
+  z-index: 2;
+}
+
+.event-display.active {
   z-index: 1;
+  font-size: 17px;
+  border: 2px solid white;
+  cursor: default;
 }
 
 .kunta {

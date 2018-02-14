@@ -27,25 +27,24 @@ var Map = {
     var t = this;
     
     var targetElement = $( '<div>' )
-    .addClass( 'index map-index' )
-    .attr( {
-      id: markerId,
-      'data-target': index
-    } )
-    .text( index )
-    .click( function mapTargetClicked(e, disableScroll) {
-      if ( ! disableScroll ) {
-        t.listObject.scrollTo( index );
-      }
-      t.map.getView().animate( { zoom: inZoom, center: pos } );
-      
-      $( '.index' ).removeClass( 'active' );
-      $( '.target' ).removeClass( 'active' );
-      
-      $( this ).addClass( 'active' );
-      $( '#target-' + index ).addClass("active");
-    } )
-    .get( 0 );
+      .addClass( 'index map-index' )
+      .attr( {
+        id: markerId,
+        'data-target': index
+      } )
+      .text( index )
+      .click( function mapTargetClicked(e, disableScroll) {
+        if ( ! disableScroll ) {
+          t.listObject.scrollTo( index );
+        }
+        t.map.getView().animate( { zoom: inZoom, center: pos } );
+        
+        $( '.index, .target, .event-display' ).removeClass( 'active' );
+        
+        $( this ).addClass( 'active' );
+        $( '#target-' + index ).addClass("active");
+      } )
+      .get( 0 );
     
     var marker = new ol.Overlay( {
       position: pos,
@@ -53,6 +52,43 @@ var Map = {
       element: targetElement
     } );
     this.map.addOverlay( marker );
+  },
+  
+  addEventTarget: function(eventTargetObject, inZoom) {
+    var index = eventTargetObject.index;
+    var position = eventTargetObject.location.slice();
+    position.push( position.shift() );
+    var pos = ol.proj.fromLonLat( position );
+    var markerId = 'map-event-target-' + index;
+    var t = this;
+    
+    var eventTargetElement = $( '<div>' )
+      .addClass( 'event-display' )
+      .attr( {
+        id: markerId,
+        'data-event-target': index
+      } )
+      .text( eventTargetObject.name )
+      .click( function mapEventTargetClicked(e, disableScroll) {
+        if ( ! disableScroll ) {
+          t.listObject.scrollTo( index, true );
+        }
+        t.map.getView().animate( { zoom: inZoom, center: pos } );
+        
+        $( '.index, .target, .event-display' ).removeClass( 'active' );
+        
+        $( this ).addClass( 'active' );
+        $( '#event-target-' + index ).addClass("active");
+      } )
+      .get( 0 );
+    
+    var marker = new ol.Overlay( {
+      position: pos,
+      positioning: 'center-center',
+      element: eventTargetElement
+    } );
+    this.map.addOverlay( marker );
+
   },
   
   connectList: function( listObject ) {
@@ -93,234 +129,28 @@ $(function documentReady() {
       }
     }
     
-    listObject.listHtml();
+    data.eventTargets.forEach( function eachEventTarget(eventTargetObject, index) {
+      eventTargetObject.index = index;
+      var now = new Date();
+      var eventStarts = new Date( eventTargetObject.starts );
+      var eventExpires = new Date( eventTargetObject.expires );
+
+      if ( eventStarts <= now && now < eventExpires ) {
+        map.addEventTarget( eventTargetObject, IN_ZOOM[eventTargetObject.map] );
+        listObject.addEventTarget( new Target( eventTargetObject ) );
+      }
+    } );
     
+    listObject.listHtml();
     
     mapEvents( listObject );
   } );
 }); // $(document).ready
 
-function MapView(maps) {
-  var cont = $(".map-container");
-  this.viewWidth = cont.width();
-  this.viewHeight = cont.height();
-  this.maps = maps;
-  this.active = 0;
-  this.mapWidth = 0.0;
-  this.mapHeight = 0.0;
-  this.mapViewWidth = 0.0;
-  this.mapViewHeight = 0.0;
-  this.center = [50.0, 50.0];
-  this.zoom = 0.1;
-  this.minZoom = 0.1;
-  this.firstIndexes = [];
-
-  this.setFirstIndexes = function() {
-    var counter = 1;
-    var indexes = [];
-    $.each(this.maps, function(key, val) {
-      val.firstIndex = counter;
-      indexes.push(counter);
-      counter += val.targets.length;
-    });
-    this.firstIndexes = indexes;
-  };
-
-  this.setMinZoom = function() {
-    var minZoomX = this.viewWidth / this.maps[this.active].mapWidth;
-    var minZoomY = this.viewHeight / this.maps[this.active].mapHeight;
-    if (minZoomX > minZoomY) {
-      this.minZoom = minZoomX;
-    } else {
-      this.minZoom = minZoomY;
-    }
-  };
-
-  this.setZoom = function(zoom) {
-    this.zoom = fitToRange(zoom, this.minZoom, 1.0);
-  };
-
-  this.setCenter = function(center) {
-    this.center = [fitToRange(center[0], 0, 100), fitToRange(center[1], 0, 100)];
-  };
-
-  this.setView = function(a) {
-    var animate = (typeof a !== 'undefined' ? a : true);
-    this.mapViewWidth = this.mapWidth * this.zoom;
-    this.mapViewHeight = this.mapHeight * this.zoom;
-    var bottomPx = this.center[1] / 100 * this.mapViewHeight;
-    var rightPx = this.center[0] / 100 * this.mapViewWidth;
-
-    bottomPx -= this.viewHeight / 2;
-    rightPx -= this.viewWidth / 2;
-    bottomPx = fitToRange(bottomPx, 0, this.mapViewHeight - this.viewHeight);
-    rightPx = fitToRange(rightPx, 0, this.mapViewWidth - this.viewWidth);
-
-    if(animate) {
-      $(".map").animate({
-        right: rightPx + "px",
-        bottom: bottomPx + "px",
-        width: this.mapViewWidth + "px",
-        height: this.mapViewHeight + "px"
-      }, ANIMATION_SPEED);
-    } else {
-      $(".map").css({
-        right: rightPx + "px",
-        bottom: bottomPx + "px",
-        width: this.mapViewWidth + "px",
-        height: this.mapViewHeight + "px"
-      });
-    }
-  };
-
-  this.toggleHtml = function() {
-    var active = this.active;
-    var html = '';
-    $.each(this.maps, function(key, val) {
-      if (key !== active) {
-        html += '<button class="btn btn-default toggle" type="button" id="toggle-map" data-map="' + key + '" data-first-index="' + val.firstIndex + '">' + val.toggleContent() + '</button>';
-      }
-    });
-    $('.toggle-buttons').html(html);
-  };
-
-  this.setMap = function(i) {
-    this.setFirstIndexes();
-    var map = this.maps[i];
-    this.active = i;
-    map.mapHtml();
-    this.toggleHtml();
-    this.mapWidth = map.mapWidth;
-    this.mapHeight = map.mapHeight;
-    this.setCenter(map.initCenter);
-    this.setMinZoom();
-    this.setZoom(map.initZoom);
-    this.setView();
-  };
-
-  this.zoomMap = function(direction) {
-    var amount = 2.0;
-    if (direction === 'out') {
-      amount = 0.5;
-    }
-    this.setZoom(this.zoom * amount);
-    this.setView();
-  };
-
-  this.moveMap = function(direction) {
-    var step = 5;
-    var deltaX = 0;
-    var deltaY = 0;
-    switch (direction) {
-      case 'up':
-        deltaY = -step;
-        break;
-      case 'right':
-        deltaX = step;
-        break;
-      case 'down':
-        deltaY = step;
-        break;
-      case 'left':
-        deltaX = -step;
-    }
-    var newCenter = [this.center[0] + deltaX, this.center[1] + deltaY];
-    this.setCenter(newCenter);
-    this.setView();
-  };
-
-  this.resize = function() {
-    this.viewWidth = cont.width();
-    this.viewHeight = cont.height();
-    this.setMinZoom();
-    this.setZoom(this.zoom);
-    this.setView(false);
-  };
-
-  this.moveTo = function(target) {
-    var i = 1;
-    var len = this.firstIndexes.length;
-    while (i < len) {
-      if (target < this.firstIndexes[i]) {
-        break;
-      }
-      i++;
-    }
-    i--;
-    if (i !== this.active) {
-      this.setMap(i);
-    }
-    var index = target - this.firstIndexes[i];
-    var newCenter = this.maps[i].targets[index];
-    var newZoom = this.maps[i].focusZoom;
-    this.setCenter(newCenter);
-    if (newZoom > this.zoom) {
-      this.setZoom(newZoom);
-    }
-    this.setView();
-  };
-}
-
-function Mapzzz(name, alt, initCenter, initZoom, focusZoom, mapWidth, mapHeight) {
-  this.name = name;
-  this.src = 'images/' + name + '.png';
-  this.thumbnail = 'images/' + name + '-thumb.jpg';
-  this.alt = alt;
-  this.initCenter = initCenter;
-  this.initZoom = initZoom;
-  this.focusZoom = focusZoom;
-  this.mapWidth = mapWidth;
-  this.mapHeight = mapHeight;
-  this.targets = [];
-  this.eventTargets = [];
-  this.firstIndex = 1;
-
-  this.addTarget = function(targ) {
-    if (!targ.sub && targ.map === this.name) {
-      this.targets.push(targ.mapPercent);
-    }
-  };
-  
-  this.addEventTarget = function(eTarg) {
-    var now = new Date();
-    if (eTarg.map == this.name && (eTarg.expires === null || now < eTarg.expires)) {
-      this.eventTargets.push(eTarg);
-    }
-  };
-
-  this.mapHtml = function() {
-    var firstIndex = this.firstIndex;
-    var html = '<img src="' + this.src + '" id="map-img" width="' + this.mapWidth + '" height="' + this.mapHeight + '" alt="' + this.alt + '" draggable="false">';
-
-    $.each(this.targets, function(key, val) {
-      var i = firstIndex + key;
-      html += '<span class="index map-index" id="map-target-' + i + '" data-target="' + i + '" style="top: ' + val[1] + '%; left: ' + val[0] + '%;"><div>' + i + '</div></span>';
-    });
-    
-    $.each(this.eventTargets, function(key, val) {
-      if (val.type = 'custom') {
-        html += val.customHtml;
-      } else {
-        html += '<a class="event-display" href="' + val.url + '" style="top: ' + val.coord[1] + '%; left: ' + val.coord[0] + '%;" target="_blank"><div>' + val.name + '</div></a>';
-        
-        $.each(val.circles, function(key2, circle) {
-          html += '<div class="circle" style="top: ' + circle.center[1] + '%; left: ' + circle.center[0] + '%; width: ' + circle.size + '%; height: ' + circle.size + '%;"></div>';
-        });
-      }
-    });
-    
-    $('#map-div').html(html);
-  };
-
-  this.toggleContent = function() {
-    var toggleSize = 80;
-    var html = '<img src="' + this.thumbnail + '" alt="' + alt + '" width="' + toggleSize + '" height="' + toggleSize + '"><span>' + this.name + '</span>';
-    return html;
-  };
-}
 
 function List() {
   this.targets = [];
+  this.eTargs = [];
 
   this.addTarget = function(targ) {
     if (!targ.sub) {
@@ -330,10 +160,23 @@ function List() {
       this.targets[n - 1].push(targ);
     }
   };
-
+  
+  this.addEventTarget = function(eTarg) {
+    this.eTargs.push( eTarg );
+  }
+  
   this.listHtml = function() {
     var targs = this.targets;
+    var eTargs = this.eTargs;
     var html = '';
+    
+    eTargs.forEach( function eachETarg(eTarg) {
+      var i = eTarg.index;
+      html += '<div class="target" id="event-target-' + i + '" data-event-target="' + i + '"><div class="list-index-container"></div><!-- .list-index-container -->';
+      html += eTarg.targetHtml();
+      html += '</div><!-- .target -->';
+    } );
+    
     $.each(targs, function(key, val) {
       var i = key + 1;
       html += '<div class="target" id="target-' + i + '" data-target="' + i + '"><div class="list-index-container"><div class="index">' + i + '</div></div><!-- .list-index-container -->';
@@ -343,12 +186,14 @@ function List() {
       html += '</div><!-- .target -->';
 
     });
+    
     $("#list").html(html);
   };
   
-  this.scrollTo = function(i) {
-    var offsetZero = $('#target-1').offset().top;
-    var targetId = '#target-' + i.toString();
+  this.scrollTo = function(i, isEvent) {
+    var idPrefix = ( isEvent ) ? '#event-target-' : '#target-';
+    var offsetZero = $('.target:first-child').offset().top;
+    var targetId = idPrefix + i;
     var offsetTop = $(targetId).offset().top - offsetZero;
     $('.list-container').animate({
       scrollTop: offsetTop
@@ -358,7 +203,7 @@ function List() {
 
 function Target(targetObject) {
   this.map = targetObject.map;
-  this.name = targetObject.name;
+  this.name = targetObject.listName || targetObject.name;
   this.phone = targetObject.phone;
   this.url = targetObject.url;
   this.address = targetObject.address;
@@ -367,6 +212,7 @@ function Target(targetObject) {
   this.fb = targetObject.fb;
   this.sub = targetObject.sub;
   this.mapPercent = targetObject.mapPercent;
+  this.index = targetObject.index || null;
 
   this.itemHtml = function(value, type, attributes) {
     if (!value) {
@@ -387,6 +233,7 @@ function Target(targetObject) {
 
   this.targetHtml = function() {
     var subClass = (this.sub) ? ' sub' : '';
+    var urlObject = filterUrl( this.url );
     var html = '<div class="list-text-container' + subClass + '"><h3 class="name">' + this.name + '</h3><p><span class="phone">' + this.phone + '</span>';
 
     html += this.itemHtml(this.address, 'span', {
@@ -396,12 +243,14 @@ function Target(targetObject) {
     html += this.itemHtml(this.info, 'span', {
       class: 'info'
     });
-
-    html += this.itemHtml(this.url, 'a', {
-      class: 'url',
-      href: 'http://' + this.url,
-      target: '_blank'
-    });
+    
+    if ( urlObject ) {
+      html += this.itemHtml(urlObject.view, 'a', {
+        class: 'url',
+        href: urlObject.href,
+        target: '_blank'
+      });
+    }
 
     html += this.itemHtml(this.fb, 'a', {
       href: this.fb,
@@ -415,27 +264,22 @@ function Target(targetObject) {
   };
 }
 
-function fitToRange(value, min, max) {
-  if (value <= min) {
-    return min;
-  } else if (value < max) {
-    return value;
-  } else {
-    return max;
-  }
-} // function fitToRange
+function filterUrl(input) {
+  if ( ! input ) return null;
+  var re = /^(http(?:s)?:\/\/)?([^\/(?!$)]*)(\/?)$/;
+  var urlParts = input.match( re );
+  
+  var protocol = urlParts[1] || 'http://';
+  
+  return {
+    href: protocol + urlParts[2] + urlParts[3],
+    view: urlParts[2]
+  };
+}
 
 function mapEvents(listObject, mapWindow) {
-  $('.toggle-buttons').on('click', '.toggle', function() {
-    $(".target").removeClass("active");
-    var i = parseInt($(this).attr('data-map'));
-    var firstIndex = parseInt($(this).attr('data-first-index'));
-    mapWindow.setMap(i);
-    listObject.scrollTo(firstIndex);
-  });
-
   $('#list').on('click', '.target', function() {
-    var mapTargetSelector = '#map-target-' + $( this ).attr( 'data-target' );
+    var mapTargetSelector = ( $( this ).attr( 'data-target' ) ) ? '#map-target-' + $( this ).attr( 'data-target' ) : '#map-event-target-' + $( this ).attr( 'data-event-target' );
     $( mapTargetSelector ).trigger( 'click', [ true ] );
   });
 
@@ -458,12 +302,14 @@ function mapEvents(listObject, mapWindow) {
     var targetId = '#target-' + $(this).attr('data-target');
     $(targetId).removeClass('hover');
   }); // #map-div on mouseout
-}
+  
+  $('#map-div').on('mouseover', '.event-display', function() {
+    var targetId = '#event-target-' + $( this ).attr( 'data-event-target' );
+    $( targetId ).addClass( 'hover' );
+  }); // #map-div on mouseover
 
-function eventDisplay(name, url, coord, expiration) {
-  var now = new Date();
-  if(now < expiration) {
-    var eventHtml = '<a class="event-display" href="' + url + '" style="top: ' + coord[1] + '%; left: ' + coord[0] + '%;" target="_blank"><div>' + name + '</div></a>';
-    $('#map-div').append(eventHtml);
-  }
+  $('#map-div').on('mouseout', '.event-display', function() {
+    var targetId = '#event-target-' + $( this ).attr( 'data-event-target' );
+    $( targetId ).removeClass( 'hover' );
+  }); // #map-div on mouseout
 }
