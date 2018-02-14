@@ -1,5 +1,8 @@
 var ANIMATION_SPEED = 700;
-var IN_ZOOM = 16;
+var IN_ZOOM = {
+  keskusta: 16,
+  kunta: 11
+ };
 
 var Map = {
   init: function(center, zoom, target) {
@@ -13,11 +16,12 @@ var Map = {
       view: new ol.View( {
         center: ol.proj.fromLonLat( center ),
         zoom: zoom
-      } )
+      } ),
+      loadTilesWhileAnimating: true
     } );
   },
   
-  addTarget: function(index, position) {
+  addTarget: function(index, position, inZoom) {
     var pos = ol.proj.fromLonLat( position );
     var markerId = 'map-target-' + index;
     var t = this;
@@ -29,9 +33,17 @@ var Map = {
       'data-target': index
     } )
     .text( index )
-    .click( function mapTargetClicked() {
-      t.listObject.scrollTo( index );
-      t.map.getView().animate( { zoom: IN_ZOOM, center: pos } );
+    .click( function mapTargetClicked(e, disableScroll) {
+      if ( ! disableScroll ) {
+        t.listObject.scrollTo( index );
+      }
+      t.map.getView().animate( { zoom: inZoom, center: pos } );
+      
+      $( '.index' ).removeClass( 'active' );
+      $( '.target' ).removeClass( 'active' );
+      
+      $( this ).addClass( 'active' );
+      $( '#target-' + index ).addClass("active");
     } )
     .get( 0 );
     
@@ -66,15 +78,20 @@ $(function documentReady() {
 
     var listObject = new List();
     map.connectList( listObject );
+    var mapIndex = 1;
     
-    data.targets.forEach( function(targetObject, index) {
+    for ( var i = 0; i < data.targets.length; i++ ) {
+      var targetObject = data.targets[i];
       listObject.addTarget( new Target( targetObject ) );
       
       var position = targetObject.location.slice();
       position.push( position.shift() );
       
-      map.addTarget( index + 1, position );
-    } );
+      if ( ! targetObject.sub ) {
+        map.addTarget( mapIndex, position, IN_ZOOM[targetObject.map] );
+        mapIndex++;
+      }
+    }
     
     listObject.listHtml();
     
@@ -319,7 +336,7 @@ function List() {
     var html = '';
     $.each(targs, function(key, val) {
       var i = key + 1;
-      html += '<div class="target" id="target-' + i + '" data-target="' + i + '" data-left="' + val[0].mapPercent[0] + '" data-top="' + val[0].mapPercent[1] + '"><div class="list-index-container"><div class="index">' + i + '</div></div><!-- .list-index-container -->';
+      html += '<div class="target" id="target-' + i + '" data-target="' + i + '"><div class="list-index-container"><div class="index">' + i + '</div></div><!-- .list-index-container -->';
       $.each(val, function(key2, val2) {
         html += val2.targetHtml();
       });
@@ -418,14 +435,8 @@ function mapEvents(listObject, mapWindow) {
   });
 
   $('#list').on('click', '.target', function() {
-    var i = $(this).attr('data-target');
-    mapWindow.moveTo(i);
-    var mapTargetId = '#map-target-' + i;
-    $(".target").removeClass("active");
-    $(".index").removeClass('active');
-
-    $(this).addClass("active");
-    $(mapTargetId).addClass("active");
+    var mapTargetSelector = '#map-target-' + $( this ).attr( 'data-target' );
+    $( mapTargetSelector ).trigger( 'click', [ true ] );
   });
 
   $( '#list' ).on( 'mouseover', '.target', function listTargetMouseover() {
@@ -447,19 +458,6 @@ function mapEvents(listObject, mapWindow) {
     var targetId = '#target-' + $(this).attr('data-target');
     $(targetId).removeClass('hover');
   }); // #map-div on mouseout
-
-  $('#map-div').on('click', '.index', function() {
-    console.log('click');
-    var i = $(this).attr('data-target');
-    
-    listObject.scrollTo(parseInt(i));
-    var targetId = '#target-' + i;
-    $(targetId).trigger('click');
-  }); // #map-div on click
-
-  $(window).on('resize', function() {
-    mapWindow.resize();
-  }); // window on resize
 }
 
 function eventDisplay(name, url, coord, expiration) {
