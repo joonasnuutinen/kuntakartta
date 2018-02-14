@@ -164,10 +164,11 @@ a {
   height: 28px;
   font-size: 17px;
   font-weight: bold;
-  margin: -12px 0 0 -12px;
+  margin: -14px 0 0 -14px;
   z-index: 1;
   border: 2px solid #fff;
   cursor: default;
+  padding-top: 3px;
 }
 
 .index.active div {
