@@ -56,8 +56,34 @@ var Map = {
         
         var $listTarget = $( '#target-' + index );
         $listTarget.addClass("active");
+        var $preview = $( '#preview' );
+        var $mapContainer = $( '.map-container' );
+        
+        var $expandButton = $( '<span>' )
+          .addClass( 'expand-preview' )
+          .html( '<i class="fas fa-chevron-up"></i>' )
+          .click( function expandButtonClicked() {
+            var mapHeight = 20; // %
+            
+            $mapContainer.animate( {
+              height: mapHeight + '%'
+            }, ANIMATION_SPEED );
+            
+            $preview.animate( {
+              height: 100 - mapHeight + '%'
+            }, ANIMATION_SPEED, function previewExpanded() {
+              t.map.updateSize();
+            } );
+            
+            t.map.getView().animate( {
+              zoom: inZoom,
+              center: pos,
+              duration: ANIMATION_SPEED + 300
+            } );
+          } );
         
         $( '#preview' ).html( $listTarget.html() ).show();
+        $( '#preview' ).append( $expandButton );
         
         $( '.map-container' ).animate( {
           height: $( window ).innerHeight() - $( '#preview' ).innerHeight() + 'px'

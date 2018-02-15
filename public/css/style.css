@@ -115,6 +115,13 @@ a:visited {
   background-color: #fff8c8;
 }
 
+.expand-preview {
+  float: right;
+  font-size: 2em;
+  color: rgb(0, 0, 238);
+  cursor: pointer;
+}
+
 .overlays {
   display: none;
 }
@@ -217,7 +224,8 @@ a:visited {
 }
 
 .list-text-container {
-  margin-left: 28px;
+  margin-left: 10px;
+  float: left;
 }
 
 .list-text-container.sub {
