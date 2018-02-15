@@ -17,7 +17,7 @@ var Map = {
         center: ol.proj.fromLonLat( center ),
         zoom: zoom
       } ),
-      loadTilesWhileAnimating: true
+      loadTilesWhileAnimating: false
     } );
   },
   
@@ -37,7 +37,7 @@ var Map = {
         if ( ! disableScroll ) {
           t.listObject.scrollTo( index );
         }
-        t.map.getView().animate( { zoom: inZoom, center: pos } );
+        t.map.getView().animate( { zoom: inZoom, center: pos, duration: ANIMATION_SPEED } );
         
         $( '.index, .target, .event-display' ).removeClass( 'active' );
         
@@ -74,7 +74,7 @@ var Map = {
         if ( ! disableScroll ) {
           t.listObject.scrollTo( index, true );
         }
-        t.map.getView().animate( { zoom: inZoom, center: pos } );
+        t.map.getView().animate( { zoom: inZoom, center: pos, duration: ANIMATION_SPEED } );
         
         $( '.index, .target, .event-display' ).removeClass( 'active' );
         
