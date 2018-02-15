@@ -202,7 +202,7 @@ function List() {
     
     $.each(targs, function(key, val) {
       var i = key + 1;
-      html += '<div class="target" id="target-' + i + '" data-target="' + i + '"><div class="list-index-container"><div class="index">' + i + '</div></div><!-- .list-index-container -->';
+      html += '<div class="target" id="target-' + i + '" data-target="' + i + '"><div class="list-index-container"><div class="index"><i class="' + val[0].faClass + '"></i></div></div><!-- .list-index-container -->';
       $.each(val, function(key2, val2) {
         html += val2.targetHtml();
       });
@@ -236,6 +236,7 @@ function Target(targetObject) {
   this.sub = targetObject.sub;
   this.mapPercent = targetObject.mapPercent;
   this.index = targetObject.index || null;
+  this.faClass = FA[targetObject.branch] || null;
 
   this.itemHtml = function(value, type, attributes) {
     if (!value) {
