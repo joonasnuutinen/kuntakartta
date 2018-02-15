@@ -1,8 +1,15 @@
-var ANIMATION_SPEED = 700;
-var IN_ZOOM = {
+const ANIMATION_SPEED = 700;
+const IN_ZOOM = {
   keskusta: 16,
   kunta: 11
  };
+const INIT_ZOOM = 14;
+const FA = {
+  'Terveys ja liikunta': 'fas fa-heart',
+  'Ravintolat ja kahvilat': 'fas fa-utensils',
+  'Museot ja nähtävyydet': 'fas fa-paint-brush',
+  'Kaupat ja myymälät': 'fas fa-shopping-cart'
+};
 
 var Map = {
   init: function(center, zoom, target) {
@@ -21,10 +28,14 @@ var Map = {
     } );
   },
   
-  addTarget: function(index, position, inZoom) {
+  addTarget: function(targetObject, inZoom) {
+    var index = targetObject.index;
+    var position = targetObject.location.slice();
+    position.push( position.shift() );
     var pos = ol.proj.fromLonLat( position );
     var markerId = 'map-target-' + index;
     var t = this;
+    var targetHtml = '<i class="' + FA[targetObject.branch] + '"></i>';
     
     var targetElement = $( '<div>' )
       .addClass( 'index map-index' )
@@ -32,7 +43,7 @@ var Map = {
         id: markerId,
         'data-target': index
       } )
-      .text( index )
+      .html( targetHtml )
       .click( function mapTargetClicked(e, disableScroll) {
         if ( ! disableScroll ) {
           t.listObject.scrollTo( index );
@@ -42,7 +53,17 @@ var Map = {
         $( '.index, .target, .event-display' ).removeClass( 'active' );
         
         $( this ).addClass( 'active' );
-        $( '#target-' + index ).addClass("active");
+        
+        var $listTarget = $( '#target-' + index );
+        $listTarget.addClass("active");
+        
+        $( '#preview' ).html( $listTarget.html() ).show();
+        
+        $( '.map-container' ).animate( {
+          height: $( window ).innerHeight() - $( '#preview' ).innerHeight() + 'px'
+        }, ANIMATION_SPEED, function animationDone() {
+          $( this ).css( { height: 'calc(100% - ' + $( '#preview' ).innerHeight() + 'px)' } )
+        } );
       } )
       .get( 0 );
     
@@ -112,7 +133,7 @@ $(function documentReady() {
     } )
   ).then( function() {
     var map = Object.create( Map );
-    map.init( [30.9327, 62.6716], 14, 'map-div' );
+    map.init( [30.9327, 62.6716], INIT_ZOOM, 'map-div' );
 
     var listObject = new List();
     map.connectList( listObject );
@@ -120,17 +141,17 @@ $(function documentReady() {
     
     for ( var i = 0; i < data.targets.length; i++ ) {
       var targetObject = data.targets[i];
+      targetObject.index = mapIndex;
       listObject.addTarget( new Target( targetObject ) );
       
-      var position = targetObject.location.slice();
-      position.push( position.shift() );
-      
       if ( ! targetObject.sub ) {
-        map.addTarget( mapIndex, position, IN_ZOOM[targetObject.map] );
+        map.addTarget( targetObject, IN_ZOOM[targetObject.map] );
         mapIndex++;
       }
+      
+      if ( i >= 9 ) break;
     }
-    
+    /*
     data.eventTargets.forEach( function eachEventTarget(eventTargetObject, index) {
       eventTargetObject.index = index;
       var now = new Date();
@@ -142,7 +163,7 @@ $(function documentReady() {
         listObject.addEventTarget( new Target( eventTargetObject ) );
       }
     } );
-    
+    */
     listObject.listHtml();
     
     mapEvents( listObject );
