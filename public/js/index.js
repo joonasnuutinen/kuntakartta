@@ -49,7 +49,8 @@ var Map = {
     var marker = new ol.Overlay( {
       position: pos,
       positioning: 'center-center',
-      element: targetElement
+      element: targetElement,
+      stopEvent: false
     } );
     this.map.addOverlay( marker );
   },
@@ -85,7 +86,8 @@ var Map = {
     var marker = new ol.Overlay( {
       position: pos,
       positioning: 'center-center',
-      element: eventTargetElement
+      element: eventTargetElement,
+      stopEvent: false
     } );
     this.map.addOverlay( marker );
 
