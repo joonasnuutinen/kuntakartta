@@ -1,4 +1,4 @@
-const ANIMATION_SPEED = 700;
+const ANIMATION_SPEED = 600;
 const IN_ZOOM = {
   keskusta: 16,
   kunta: 11
@@ -55,40 +55,69 @@ var Map = {
         $( this ).addClass( 'active' );
         
         var $listTarget = $( '#target-' + index );
-        $listTarget.addClass("active");
+        $listTarget.addClass( 'active' );
         var $preview = $( '#preview' );
         var $mapContainer = $( '.map-container' );
+        var previewHeight;
+        var $additionalContent = t.listObject.targets[index - 1][0].additionalContent();
         
         var $expandButton = $( '<span>' )
           .addClass( 'expand-preview' )
           .html( '<i class="fas fa-chevron-up"></i>' )
           .click( function expandButtonClicked() {
-            var mapHeight = 20; // %
+            var previewHeight = $preview.innerHeight();
             
-            $mapContainer.animate( {
-              height: mapHeight + '%'
-            }, ANIMATION_SPEED );
+            $( this )
+              .css( 'transform', 'rotateX(180deg)' )
+              .off( 'click' )
+              .click( function collapseButtonClicked() {
+                
+                $preview
+                  .removeClass( 'preview--expanded' )
+                  .animate( {
+                    height: previewHeight
+                  }, ANIMATION_SPEED );
+                
+                $( this )
+                  .css( 'transform', 'rotateX(0)' )
+                  .off( 'click' )
+                  .click( expandButtonClicked );
+              } );
             
-            $preview.animate( {
-              height: 100 - mapHeight + '%'
-            }, ANIMATION_SPEED, function previewExpanded() {
-              t.map.updateSize();
-            } );
             
-            t.map.getView().animate( {
-              zoom: inZoom,
-              center: pos,
-              duration: ANIMATION_SPEED + 300
-            } );
+            $preview
+              .addClass( 'preview--expanded' )
+              .animate( {
+                height: '100%'
+              }, ANIMATION_SPEED );
+            
           } );
         
-        $( '#preview' ).html( $listTarget.html() ).show();
-        $( '#preview' ).append( $expandButton );
+        var $previewTarget = $listTarget
+          .clone()
+          .attr( 'id', 'preview-target' )
+          .removeClass( 'active hover' )
+          .append( $expandButton );
         
-        $( '.map-container' ).animate( {
-          height: $( window ).innerHeight() - $( '#preview' ).innerHeight() + 'px'
+        $preview
+          .html( $previewTarget )
+          .append( $additionalContent )
+          .show();
+        
+        previewHeight = $previewTarget.innerHeight();
+        
+        $preview
+          .removeClass( 'preview--fixed' )
+          .css( 'height', 'auto' );
+        $mapContainer.animate( {
+          height: $( window ).innerHeight() - previewHeight + 'px'
         }, ANIMATION_SPEED, function animationDone() {
-          $( this ).css( { height: 'calc(100% - ' + $( '#preview' ).innerHeight() + 'px)' } )
+          $( this ).css( { height: 'calc(100% - ' + previewHeight + 'px)' } );
+          t.map.updateSize();
+          $preview
+            .addClass( 'preview--fixed' )
+            .css( 'height', previewHeight );
+          $preview.find( '.js-additional-content' ).show();
         } );
       } )
       .get( 0 );
@@ -177,7 +206,7 @@ $(function documentReady() {
       
       if ( i >= 9 ) break;
     }
-    /*
+    /* TEMPORARILY DISABLED
     data.eventTargets.forEach( function eachEventTarget(eventTargetObject, index) {
       eventTargetObject.index = index;
       var now = new Date();
@@ -263,6 +292,7 @@ function Target(targetObject) {
   this.mapPercent = targetObject.mapPercent;
   this.index = targetObject.index || null;
   this.faClass = FA[targetObject.branch] || null;
+  var t = this;
 
   this.itemHtml = function(value, type, attributes) {
     if (!value) {
@@ -289,11 +319,11 @@ function Target(targetObject) {
     html += this.itemHtml(this.address, 'span', {
       class: 'address'
     });
-
+    /* TO BE REMOVED
     html += this.itemHtml(this.info, 'span', {
       class: 'info'
     });
-    
+    */
     if ( urlObject ) {
       html += this.itemHtml(urlObject.view, 'a', {
         class: 'url',
@@ -310,7 +340,35 @@ function Target(targetObject) {
     });
 
     html += '</p></div><!-- .list-text-container -->';
+
     return html;
+  };
+  
+  this.additionalContent = function() {
+    var $additionalContent = $( '<div>' )
+      .addClass( 'target__additional-content js-additional-content' );
+    
+    var $targetImage = $( '<img>' )
+      .addClass( 'target__image' )
+      .attr( {
+        src: 'http://via.placeholder.com/1280x720?text=Kuva',
+        alt: 'Kuva kohteesta ' + t.name,
+        width: '1280',
+        height: '720'
+      } )
+      .appendTo( $additionalContent );
+    
+    var $targetInfo = $( '<div>' )
+      .addClass( 'target__info' )
+      .text( t.info )
+      .appendTo( $additionalContent );
+    
+    var $targetDescription = $( '<div>' )
+      .addClass( 'target__description' )
+      .html( "<p>Tähän tulee lyhyt kuvaus yrityksestä</p><p>Mieleni minun tekevi, aivoni ajattelevi lähteäni laulamahan, saa'ani sanelemahan, sukuvirttä suoltamahan, lajivirttä laulamahan. Sanat suussani sulavat, puhe'et putoelevat, kielelleni kerkiävät, hampahilleni hajoovat.</p><p>Veli kulta, veikkoseni, kaunis kasvinkumppalini! Lähe nyt kanssa laulamahan, saa kera sanelemahan yhtehen yhyttyämme, kahta'alta käytyämme! Harvoin yhtehen yhymme, saamme toinen toisihimme näillä raukoilla rajoilla, poloisilla Pohjan mailla.</p>")
+      .appendTo( $additionalContent );
+    
+    return $additionalContent;
   };
 }
 
