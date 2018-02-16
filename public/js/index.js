@@ -11,8 +11,125 @@ const FA = {
   'Kaupat ja myymälät': 'fas fa-shopping-cart'
 };
 
+var Filter = {
+  init: function( $target, map ) {
+    var t = this;
+    
+    t.optionList = $( '<ul>' )
+      .addClass( 'filter__list' )
+      .appendTo( $target );
+    
+    $target
+      .find( '.js-filter__button' )
+      .click( function filterButtonClicked() {
+        t.toggleOptions();
+      } );
+    
+    t.addOption( 'Näytä kaikki', true );
+    t.target = $target;
+    t.map = map;
+  },
+  
+  toggleOptions: function() {
+    this.optionList.slideToggle();
+  },
+  
+  addOption: function( optionName, showAll ) {
+    // todo: instead of adding to the list, add to array `this.options` alphapetically
+    
+    var t = this;
+    
+    var $option = $( '<li>' )
+      .addClass( 'filter__option' )
+      .text( optionName )
+      .click( function optionClicked() {
+        if ( showAll ) {
+          t.map.showAllTargets();
+        } else {
+          t.map.hideAllTargets();
+          // show matching targets
+        }
+        
+      } )
+      .appendTo( t.optionList );
+  },
+  
+  addOptionsToList: function() {
+    // todo: add each option in `this.options` to the list as in `this.addOption()`
+  }
+};
+
+var Preview = {
+  init: function( $target ) {
+    this.target = $target;
+  },
+  
+  show: function( $listTarget, $additionalContent ) {
+    var $preview = this.target;
+    var previewHeight;
+    var $expandButton = $( '<span>' )
+      .addClass( 'expand-preview' )
+      .html( '<i class="fas fa-chevron-up"></i>' )
+      .click( function expandButtonClicked() {
+        $( this )
+          .css( 'transform', 'rotateX(180deg)' )
+          .off( 'click' )
+          .click( function collapseButtonClicked() {
+            
+            $preview
+              .removeClass( 'preview--expanded' )
+              .animate( {
+                height: previewHeight
+              }, ANIMATION_SPEED );
+            
+            $( this )
+              .css( 'transform', 'rotateX(0)' )
+              .off( 'click' )
+              .click( expandButtonClicked );
+          } );
+        
+        
+        $preview
+          .addClass( 'preview--expanded' )
+          .animate( {
+            height: '100%'
+          }, ANIMATION_SPEED );
+        
+      } );
+    
+    var $previewTarget = $listTarget
+      .clone()
+      .attr( 'id', 'preview-target' )
+      .removeClass( 'active hover' )
+      .append( $expandButton );
+    
+    $preview
+      .html( $previewTarget )
+      .append( $additionalContent )
+    
+    previewHeight = $previewTarget.innerHeight();
+
+    $preview.animate( {
+      height: previewHeight + 'px'
+    }, ANIMATION_SPEED, function animationDone() {
+      $( this ).find( '.js-additional-content' ).show();
+    } );
+  },
+  
+  hide: function() {
+    this.target
+      .animate( { 
+        height: 0
+      }, ANIMATION_SPEED, function previewHidden() {
+        $( this ).html( '' );
+      } );
+  }
+};
+
 var Map = {
   init: function(center, zoom, target) {
+    var t = this;
+    
     this.map = new ol.Map( {
       target: target,
       layers: [
@@ -23,9 +140,15 @@ var Map = {
       view: new ol.View( {
         center: ol.proj.fromLonLat( center ),
         zoom: zoom
-      } ),
-      loadTilesWhileAnimating: false
+      } )
     } );
+    
+    this.map.on( 'click', function mapClicked() {
+      t.preview.hide();
+      t.resetActiveTargets();
+    } );
+    
+    t.target = $( '#' + target );
   },
   
   addTarget: function(targetObject, inZoom) {
@@ -45,80 +168,20 @@ var Map = {
       } )
       .html( targetHtml )
       .click( function mapTargetClicked(e, disableScroll) {
+        var $listTarget = $( '#target-' + index );
+        var $additionalContent = t.listObject.targets[index - 1][0].additionalContent();
+        
         if ( ! disableScroll ) {
           t.listObject.scrollTo( index );
         }
+        
         t.map.getView().animate( { zoom: inZoom, center: pos, duration: ANIMATION_SPEED } );
         
-        $( '.index, .target, .event-display' ).removeClass( 'active' );
-        
+        t.resetActiveTargets();
         $( this ).addClass( 'active' );
-        
-        var $listTarget = $( '#target-' + index );
         $listTarget.addClass( 'active' );
-        var $preview = $( '#preview' );
-        var $mapContainer = $( '.map-container' );
-        var previewHeight;
-        var $additionalContent = t.listObject.targets[index - 1][0].additionalContent();
-        
-        var $expandButton = $( '<span>' )
-          .addClass( 'expand-preview' )
-          .html( '<i class="fas fa-chevron-up"></i>' )
-          .click( function expandButtonClicked() {
-            var previewHeight = $preview.innerHeight();
-            
-            $( this )
-              .css( 'transform', 'rotateX(180deg)' )
-              .off( 'click' )
-              .click( function collapseButtonClicked() {
-                
-                $preview
-                  .removeClass( 'preview--expanded' )
-                  .animate( {
-                    height: previewHeight
-                  }, ANIMATION_SPEED );
-                
-                $( this )
-                  .css( 'transform', 'rotateX(0)' )
-                  .off( 'click' )
-                  .click( expandButtonClicked );
-              } );
-            
-            
-            $preview
-              .addClass( 'preview--expanded' )
-              .animate( {
-                height: '100%'
-              }, ANIMATION_SPEED );
-            
-          } );
-        
-        var $previewTarget = $listTarget
-          .clone()
-          .attr( 'id', 'preview-target' )
-          .removeClass( 'active hover' )
-          .append( $expandButton );
-        
-        $preview
-          .html( $previewTarget )
-          .append( $additionalContent )
-          .show();
-        
-        previewHeight = $previewTarget.innerHeight();
-        
-        $preview
-          .removeClass( 'preview--fixed' )
-          .css( 'height', 'auto' );
-        $mapContainer.animate( {
-          height: $( window ).innerHeight() - previewHeight + 'px'
-        }, ANIMATION_SPEED, function animationDone() {
-          $( this ).css( { height: 'calc(100% - ' + previewHeight + 'px)' } );
-          t.map.updateSize();
-          $preview
-            .addClass( 'preview--fixed' )
-            .css( 'height', previewHeight );
-          $preview.find( '.js-additional-content' ).show();
-        } );
+
+        t.preview.show( $listTarget, $additionalContent );
       } )
       .get( 0 );
     
@@ -126,7 +189,7 @@ var Map = {
       position: pos,
       positioning: 'center-center',
       element: targetElement,
-      stopEvent: false
+      stopEvent: true
     } );
     this.map.addOverlay( marker );
   },
@@ -171,6 +234,23 @@ var Map = {
   
   connectList: function( listObject ) {
     this.listObject = listObject;
+  },
+  
+  connectPreviewArea: function( $target ) {
+    this.preview = Object.create( Preview );
+    this.preview.init( $target );
+  },
+  
+  resetActiveTargets: function() {
+    $( '.index, .target, .event-display' ).removeClass( 'active' );
+  },
+  
+  hideAllTargets: function() {
+    this.target.find( '.index' ).hide();
+  },
+  
+  showAllTargets: function() {
+    this.target.find( '.index' ).show();
   }
 };
 
@@ -188,10 +268,15 @@ $(function documentReady() {
     } )
   ).then( function() {
     var map = Object.create( Map );
+    var filter = Object.create( Filter );
+    
     map.init( [30.9327, 62.6716], INIT_ZOOM, 'map-div' );
+    filter.init( $( '#filter' ), map );
 
     var listObject = new List();
     map.connectList( listObject );
+    map.connectPreviewArea( $( '#preview' ) );
+    
     var mapIndex = 1;
     
     for ( var i = 0; i < data.targets.length; i++ ) {
