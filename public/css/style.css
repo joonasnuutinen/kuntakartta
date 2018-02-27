@@ -85,7 +85,6 @@
   font-weight: 700;
   letter-spacing: .04em;
   z-index: 4;
-  display: none;
 }
 
 .list-container {
@@ -100,6 +99,16 @@
   bottom: 0;
   margin-left: auto;
   margin-right: auto;
+  -webkit-transition: height 500ms;
+  transition: height 500ms;
+}
+
+.list-container--minified {
+  z-index: 5;
+}
+
+.list-container--expanded {
+  height: 100%!important;
 }
 
 .preview {
@@ -127,6 +136,9 @@
 
 .list {
   display: none;
+  overflow-y: scroll;
+  height: calc( 100% - 26px - 1em );
+  border-bottom: 1px solid #bbb;
 }
 
 /* 

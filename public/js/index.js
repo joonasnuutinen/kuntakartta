@@ -35,7 +35,6 @@ var Filter = {
   },
   
   addOption: function( optionName ) {
-    // todo: instead of adding to the list, add to array `this.options` alphabetically
     if ( this.options.includes( optionName ) ) return;
     
     this.options.push( optionName );
@@ -77,7 +76,6 @@ var Filter = {
   },
   
   addOptionsToList: function() {
-    // todo: add each option in `this.options` to the list as in `this.addOption()`
     this.createOptionElement( 'Näytä kaikki', true ).appendTo( this.optionList );
     this.options.sort().forEach( $.proxy( function eachOption( optionName ) {
       this.createOptionElement( optionName ).appendTo( this.optionList );
@@ -105,9 +103,8 @@ var Preview = {
             $preview
               .removeClass( 'preview--expanded' )
               .parent()
-              .animate( {
-                height: previewHeight
-              }, ANIMATION_SPEED );
+              .removeClass( 'list-container--expanded' )
+              .addClass( 'list-container--minified' );
             
             $( this )
               .css( 'transform', 'rotateX(0)' )
@@ -119,9 +116,8 @@ var Preview = {
         $preview
           .addClass( 'preview--expanded' )
           .parent()
-          .animate( {
-            height: '100%'
-          }, ANIMATION_SPEED );
+          .removeClass( 'list-container--minified' )
+          .addClass( 'list-container--expanded' );
         
       } );
     
@@ -132,27 +128,25 @@ var Preview = {
       .append( $expandButton );
     
     $preview
+      .show( 0 )
       .html( $previewTarget )
       .append( $additionalContent )
     
     previewHeight = $previewTarget.innerHeight();
 
-    $preview.parent().animate( {
-      height: previewHeight + 'px'
-    }, ANIMATION_SPEED, function animationDone() {
-      $( this ).find( '.js-additional-content' ).show();
-    } );
+    $preview.parent()
+      .css( 'height', previewHeight )
+      .addClass( 'list-container--minified' )
+      .removeClass( 'list-container--expanded' )
+      .find( '.js-additional-content' ).show();
   },
   
   hide: function() {
     var $preview = this.target;
     $preview
       .parent()
-      .animate( { 
-        height: 0
-      }, ANIMATION_SPEED, function previewHidden() {
-        $preview.html( '' );
-      } );
+      .css( 'height', '' )
+      .removeClass( 'list-container--minified' );
   }
 };
 
@@ -203,7 +197,7 @@ var Map = {
         var $additionalContent = t.listObject.targets[index - 1][0].additionalContent();
         
         if ( ! disableScroll ) {
-          //t.listObject.scrollTo( index );
+          t.listObject.scrollTo( index );
         }
         
         t.map.getView().animate( { zoom: inZoom, center: pos, duration: ANIMATION_SPEED } );
@@ -211,7 +205,8 @@ var Map = {
         t.resetActiveTargets();
         $( this ).addClass( 'active' );
         $listTarget.addClass( 'active' );
-
+        
+        $( '#list' ).hide( 0 );
         t.preview.show( $listTarget, $additionalContent );
       } )
       .get( 0 );
@@ -299,11 +294,28 @@ var List = {
   init: function() {
     this.targets = [];
     this.eTargs = [];
-    $( '.js-show-list' ).click( function showListContainerClicked() {
-      $( '#list-container' ).animate( {
-        height: '100%'
-      }, ANIMATION_SPEED );
-    } );
+    
+    $( '#toggle-list' )
+      .click( $.proxy( function showListContainerClicked(e) {
+        var $this = $( e.target );
+        
+        switch ( $this.attr( 'data-action' ) ) {
+          case 'show':
+            this.setShowListStatus( 'hide', 'Näytä kartta' );
+            
+            $( '#list-container' ).addClass( 'list-container--expanded' );
+            break;
+          case 'hide':
+            this.setShowListStatus( 'show', 'Näytä lista' );
+            
+            $( '#list-container' ).removeClass( 'list-container--expanded' );
+            break;
+        }
+        
+        $( '#list' ).show( 0 );
+        $( '#preview' ).hide( 0 );
+        
+      }, this ) );
   },
 
   addTarget: function(targ) {
@@ -342,6 +354,12 @@ var List = {
     });
     
     $("#list").html(html);
+  },
+  
+  setShowListStatus: function( action, text ) {
+    $( '#toggle-list' )
+      .text( text )
+      .attr( 'data-action', action );
   },
   
   scrollTo: function(i, isEvent) {
@@ -530,6 +548,7 @@ function mapEvents(listObject, mapWindow) {
   $('#list').on('click', '.target', function() {
     var mapTargetSelector = ( $( this ).attr( 'data-target' ) ) ? '#map-target-' + $( this ).attr( 'data-target' ) : '#map-event-target-' + $( this ).attr( 'data-event-target' );
     $( mapTargetSelector ).trigger( 'click', [ true ] );
+    listObject.setShowListStatus( 'show', 'Näytä lista' );
   });
 
   $( '#list' ).on( 'mouseover', '.target', function listTargetMouseover() {
