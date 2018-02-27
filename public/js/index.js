@@ -4,6 +4,7 @@ const IN_ZOOM = {
   kunta: 11
  };
 const INIT_ZOOM = 14;
+const INIT_CENTER = [30.9327, 62.6716];
 const FA = {
   'Terveys ja liikunta': 'fas fa-heart',
   'Ravintolat ja kahvilat': 'fas fa-utensils',
@@ -19,43 +20,68 @@ var Filter = {
       .addClass( 'filter__list' )
       .appendTo( $target );
     
-    $target
-      .find( '.js-filter__button' )
+    $target.find( '.js-filter__button' )
       .click( function filterButtonClicked() {
         t.toggleOptions();
       } );
     
-    t.addOption( 'Näytä kaikki', true );
     t.target = $target;
     t.map = map;
+    t.options = [];
   },
   
   toggleOptions: function() {
     this.optionList.slideToggle();
   },
   
-  addOption: function( optionName, showAll ) {
-    // todo: instead of adding to the list, add to array `this.options` alphapetically
+  addOption: function( optionName ) {
+    // todo: instead of adding to the list, add to array `this.options` alphabetically
+    if ( this.options.includes( optionName ) ) return;
     
-    var t = this;
+    this.options.push( optionName );
+  },
+  
+  createOptionElement: function( optionName, showAll ) {
+    var faClass = FA[optionName] || '';
+    
+    var $icon = $( '<span>' )
+      .addClass( 'filter__icon' )
+      .html( '<i class="' + faClass + '"></i>' );
     
     var $option = $( '<li>' )
       .addClass( 'filter__option' )
       .text( optionName )
-      .click( function optionClicked() {
+      .prepend( $icon )
+      .click( $.proxy( function optionClicked() {
+        $( '.filter__option' ).removeClass( 'filter__option--selected' );
+        $( '.filter' ).removeClass( 'filter--filtered' );
+        this.optionList.hide();
         if ( showAll ) {
-          t.map.showAllTargets();
+          this.map.showAllTargets();
         } else {
-          t.map.hideAllTargets();
-          // show matching targets
+          var pos = ol.proj.fromLonLat( INIT_CENTER );
+          this.map.showTargetsByBranch( optionName );
+          this.map.map.getView().animate( { zoom: INIT_ZOOM, center: pos, duration: ANIMATION_SPEED } );
+          this.map.preview.hide();
+          this.map.resetActiveTargets();
+          $option.addClass( 'filter__option--selected' );
+          this.target.addClass( 'filter--filtered' );
         }
-        
-      } )
-      .appendTo( t.optionList );
+      }, this ) );
+    
+    if ( showAll ) {
+      $option.addClass( 'filter__option--show-all' );
+    }
+    
+    return $option;
   },
   
   addOptionsToList: function() {
     // todo: add each option in `this.options` to the list as in `this.addOption()`
+    this.createOptionElement( 'Näytä kaikki', true ).appendTo( this.optionList );
+    this.options.sort().forEach( $.proxy( function eachOption( optionName ) {
+      this.createOptionElement( optionName ).appendTo( this.optionList );
+    }, this ) );
   }
 };
 
@@ -78,6 +104,7 @@ var Preview = {
             
             $preview
               .removeClass( 'preview--expanded' )
+              .parent()
               .animate( {
                 height: previewHeight
               }, ANIMATION_SPEED );
@@ -91,6 +118,7 @@ var Preview = {
         
         $preview
           .addClass( 'preview--expanded' )
+          .parent()
           .animate( {
             height: '100%'
           }, ANIMATION_SPEED );
@@ -109,7 +137,7 @@ var Preview = {
     
     previewHeight = $previewTarget.innerHeight();
 
-    $preview.animate( {
+    $preview.parent().animate( {
       height: previewHeight + 'px'
     }, ANIMATION_SPEED, function animationDone() {
       $( this ).find( '.js-additional-content' ).show();
@@ -117,11 +145,13 @@ var Preview = {
   },
   
   hide: function() {
-    this.target
+    var $preview = this.target;
+    $preview
+      .parent()
       .animate( { 
         height: 0
       }, ANIMATION_SPEED, function previewHidden() {
-        $( this ).html( '' );
+        $preview.html( '' );
       } );
   }
 };
@@ -164,7 +194,8 @@ var Map = {
       .addClass( 'index map-index' )
       .attr( {
         id: markerId,
-        'data-target': index
+        'data-target': index,
+        'data-branch': targetObject.branch
       } )
       .html( targetHtml )
       .click( function mapTargetClicked(e, disableScroll) {
@@ -172,7 +203,7 @@ var Map = {
         var $additionalContent = t.listObject.targets[index - 1][0].additionalContent();
         
         if ( ! disableScroll ) {
-          t.listObject.scrollTo( index );
+          //t.listObject.scrollTo( index );
         }
         
         t.map.getView().animate( { zoom: inZoom, center: pos, duration: ANIMATION_SPEED } );
@@ -251,8 +282,83 @@ var Map = {
   
   showAllTargets: function() {
     this.target.find( '.index' ).show();
+  },
+  
+  showTargetsByBranch: function(branch) {
+    this.target.find( '.index' ).each( function eachIndex() {
+      if ( $( this ).attr( 'data-branch' ) == branch ) {
+        $( this ).show();
+      } else {
+        $( this ).hide();
+      }
+    } );
   }
 };
+
+var List = {
+  init: function() {
+    this.targets = [];
+    this.eTargs = [];
+    $( '.js-show-list' ).click( function showListContainerClicked() {
+      $( '#list-container' ).animate( {
+        height: '100%'
+      }, ANIMATION_SPEED );
+    } );
+  },
+
+  addTarget: function(targ) {
+    if (!targ.sub) {
+      this.targets.push([targ]);
+    } else {
+      var n = this.targets.length;
+      this.targets[n - 1].push(targ);
+    }
+  },
+  
+  addEventTarget: function(eTarg) {
+    this.eTargs.push( eTarg );
+  },
+  
+  listHtml: function() {
+    var targs = this.targets;
+    var eTargs = this.eTargs;
+    var html = '';
+    
+    eTargs.forEach( function eachETarg(eTarg) {
+      var i = eTarg.index;
+      html += '<div class="target" id="event-target-' + i + '" data-event-target="' + i + '"><div class="list-index-container"></div><!-- .list-index-container -->';
+      html += eTarg.targetHtml();
+      html += '</div><!-- .target -->';
+    } );
+    
+    $.each(targs, function(key, val) {
+      var i = key + 1;
+      html += '<div class="target" id="target-' + i + '" data-target="' + i + '" data-branch="' + val.branch + '"><div class="list-index-container"><div class="index"><i class="' + val[0].faClass + '"></i></div></div><!-- .list-index-container -->';
+      $.each(val, function(key2, val2) {
+        html += val2.targetHtml();
+      });
+      html += '</div><!-- .target -->';
+
+    });
+    
+    $("#list").html(html);
+  },
+  
+  scrollTo: function(i, isEvent) {
+    var idPrefix = ( isEvent ) ? '#event-target-' : '#target-';
+    var offsetZero = $('.target:first-child').offset().top;
+    var targetId = idPrefix + i;
+    var offsetTop = $(targetId).offset().top - offsetZero;
+    $('.list-container').animate({
+      scrollTop: offsetTop
+    }, ANIMATION_SPEED);
+  }/*,
+    * TO BE REMOVED
+  connectFilter: function(filter) {
+    this.filter = filter;
+  }
+  */
+}
 
 // document ready
 $(function documentReady() {
@@ -269,11 +375,13 @@ $(function documentReady() {
   ).then( function() {
     var map = Object.create( Map );
     var filter = Object.create( Filter );
+    var listObject = Object.create( List );
     
-    map.init( [30.9327, 62.6716], INIT_ZOOM, 'map-div' );
+    map.init( INIT_CENTER, INIT_ZOOM, 'map-div' );
     filter.init( $( '#filter' ), map );
-
-    var listObject = new List();
+    listObject.init();
+    
+    //listObject.connectFilter( filter );
     map.connectList( listObject );
     map.connectPreviewArea( $( '#preview' ) );
     
@@ -283,6 +391,7 @@ $(function documentReady() {
       var targetObject = data.targets[i];
       targetObject.index = mapIndex;
       listObject.addTarget( new Target( targetObject ) );
+      filter.addOption( targetObject.branch );
       
       if ( ! targetObject.sub ) {
         map.addTarget( targetObject, IN_ZOOM[targetObject.map] );
@@ -305,64 +414,10 @@ $(function documentReady() {
     } );
     */
     listObject.listHtml();
-    
+    filter.addOptionsToList();
     mapEvents( listObject );
   } );
 }); // $(document).ready
-
-
-function List() {
-  this.targets = [];
-  this.eTargs = [];
-
-  this.addTarget = function(targ) {
-    if (!targ.sub) {
-      this.targets.push([targ]);
-    } else {
-      var n = this.targets.length;
-      this.targets[n - 1].push(targ);
-    }
-  };
-  
-  this.addEventTarget = function(eTarg) {
-    this.eTargs.push( eTarg );
-  }
-  
-  this.listHtml = function() {
-    var targs = this.targets;
-    var eTargs = this.eTargs;
-    var html = '';
-    
-    eTargs.forEach( function eachETarg(eTarg) {
-      var i = eTarg.index;
-      html += '<div class="target" id="event-target-' + i + '" data-event-target="' + i + '"><div class="list-index-container"></div><!-- .list-index-container -->';
-      html += eTarg.targetHtml();
-      html += '</div><!-- .target -->';
-    } );
-    
-    $.each(targs, function(key, val) {
-      var i = key + 1;
-      html += '<div class="target" id="target-' + i + '" data-target="' + i + '"><div class="list-index-container"><div class="index"><i class="' + val[0].faClass + '"></i></div></div><!-- .list-index-container -->';
-      $.each(val, function(key2, val2) {
-        html += val2.targetHtml();
-      });
-      html += '</div><!-- .target -->';
-
-    });
-    
-    $("#list").html(html);
-  };
-  
-  this.scrollTo = function(i, isEvent) {
-    var idPrefix = ( isEvent ) ? '#event-target-' : '#target-';
-    var offsetZero = $('.target:first-child').offset().top;
-    var targetId = idPrefix + i;
-    var offsetTop = $(targetId).offset().top - offsetZero;
-    $('.list-container').animate({
-      scrollTop: offsetTop
-    }, ANIMATION_SPEED);
-  };
-}
 
 function Target(targetObject) {
   this.map = targetObject.map;
@@ -377,6 +432,7 @@ function Target(targetObject) {
   this.mapPercent = targetObject.mapPercent;
   this.index = targetObject.index || null;
   this.faClass = FA[targetObject.branch] || null;
+  this.branch = targetObject.branch;
   var t = this;
 
   this.itemHtml = function(value, type, attributes) {
