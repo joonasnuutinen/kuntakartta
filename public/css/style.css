@@ -16,7 +16,7 @@
   cursor: pointer;
   font-weight: 700;
   letter-spacing: .04em;
-  z-index: 3;
+  z-index: 5;
 }
 
 .filter {
@@ -26,7 +26,7 @@
   min-width: 180px;
   transform: translate( -50%, 0 );
   margin: auto;
-  z-index: 2;
+  z-index: 4;
   text-align: center;
   display: none;
   padding-bottom: calc( 1em + 26px );
@@ -44,7 +44,6 @@
   list-style-type: none;
   margin: 0;
   padding: 0;
-  border-bottom: 1px solid #bbb;
   text-align: left;
 }
 
@@ -133,8 +132,9 @@
 
 .list {
   overflow-y: auto;
-  max-height: calc( 100% - 26px - 1em );
+  height: calc( 100% - 52px - 2em );
   border-top: 1px solid #bbb;
+  border-bottom: 1px solid #bbb;
 }
 
 /* 
@@ -153,7 +153,7 @@
   max-width: 370px;
   margin: auto;
   background-color: #fff8c8;
-  z-index: 3;
+  z-index: 5;
 }
 
 .preview--small,
