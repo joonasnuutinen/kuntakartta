@@ -20,16 +20,18 @@
           <a title="Siirry Ilomantsin Yrittäjien sivuille" href="http://ilomantsi.pkyrittajat.fi/" target="_blank"><img class="logo" src="images/logo.png"></a>
         </div>
         
-        <div id="filter" class="filter">
-          <button class="filter__button js-filter__button">Suodata</button>
-        </div>
-        
-        <button id="toggle-list" class="show-list" data-action="show" data-toggled-text="Näytä kartta">Näytä lista</button>
+        <button id="toggle-filter" class="toggle-filter js-filter__button">Suodata</button>
+        <button id="toggle-list" class="toggle-list"><i class="fas fa-bars"></i></button>
 
       </div>
-
+      
+      <div id="filter" class="filter"></div>
+      <div id="preview" class="preview"></div>
+      
       <div id="list-container" class="list-container">
-        <div id="preview" class="preview"></div>
+        <div id="search" class="search">
+          <input id="search-field" class="search__field" type="text" placeholder="Hae nimellä"></input>
+        </div>
         <div id="list" class="list"></div>
       </div>
     </div>
