@@ -57,9 +57,11 @@ var Filter = {
         $( '#filter' ).hide();
         if ( showAll ) {
           this.map.showAllTargets();
+          this.list.showAllTargets();
         } else {
           var pos = ol.proj.fromLonLat( INIT_CENTER );
           this.map.showTargetsByBranch( optionName );
+          this.list.showTargetsByBranch( optionName );
           this.map.map.getView().animate( { zoom: INIT_ZOOM, center: pos, duration: ANIMATION_SPEED } );
           this.map.preview.hide();
           this.map.resetActiveTargets();
@@ -80,6 +82,10 @@ var Filter = {
     this.options.sort().forEach( $.proxy( function eachOption( optionName ) {
       this.createOptionElement( optionName ).appendTo( this.optionList );
     }, this ) );
+  },
+  
+  connectList: function(list) {
+    this.list = list;
   }
 };
 
@@ -374,7 +380,7 @@ var List = {
     
     $.each(targs, function(key, val) {
       var i = key + 1;
-      html += '<div class="target" id="target-' + i + '" data-target="' + i + '" data-branch="' + val.branch + '"><div class="list-index-container"><div class="index"><i class="' + val[0].faClass + '"></i></div></div><!-- .list-index-container -->';
+      html += '<div class="target" id="target-' + i + '" data-target="' + i + '" data-branch="' + val[0].branch + '"><div class="list-index-container"><div class="index"><i class="' + val[0].faClass + '"></i></div></div><!-- .list-index-container -->';
       $.each(val, function(key2, val2) {
         html += val2.targetHtml();
       });
@@ -449,6 +455,20 @@ var List = {
   
   connectPreviewArea: function( preview ) {
     this.preview = preview;
+  },
+  
+  showAllTargets: function() {
+    $( '#list' ).find( '.target' ).show();
+  },
+  
+  showTargetsByBranch: function(branch) {
+    $( '#list' ).find( '.target' ).each( function eachTarget() {
+      if ( $( this ).attr( 'data-branch' ) == branch ) {
+        $( this ).show();
+      } else {
+        $( this ).hide();
+      }
+    } );
   }
 }
 
@@ -477,6 +497,7 @@ $(function documentReady() {
     
     map.connectList( listObject );
     map.connectPreviewArea( preview );
+    filter.connectList( listObject );
     listObject.connectPreviewArea( preview );
     
     var mapIndex = 1;
