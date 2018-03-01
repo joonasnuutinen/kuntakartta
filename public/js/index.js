@@ -280,8 +280,10 @@ var Map = {
       .click( function mapTargetClicked(e, clickedFromList) {
         var $listTarget = $( '#target-' + index );
         var $additionalContent = t.listObject.targets[index - 1][0].additionalContent();
+        var currentZoom = t.map.getView().getZoom();
+        var targetZoom = ( inZoom >= currentZoom ) ? inZoom : currentZoom;
         
-        t.map.getView().animate( { zoom: inZoom, center: pos, duration: ANIMATION_SPEED } );
+        t.map.getView().animate( { zoom: targetZoom, center: pos, duration: ANIMATION_SPEED } );
         
         t.resetActiveTargets();
         $( this ).addClass( 'active' );
