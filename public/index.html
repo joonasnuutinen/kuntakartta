@@ -12,7 +12,7 @@
   </head>
 
   <body>
-    <div class="app">
+    <div id="app" class="app">
       <div class="map-container">
         <div id="map-div" class="map"></div>
         
@@ -20,12 +20,12 @@
           <a title="Siirry Ilomantsin Yrittäjien sivuille" href="http://ilomantsi.pkyrittajat.fi/" target="_blank"><img class="logo" src="images/logo.png"></a>
         </div>
         
-        <button id="toggle-filter" class="toggle-filter js-filter__button">Suodata</button>
+        
         <button id="toggle-list" class="toggle-list"><i class="fas fa-bars"></i></button>
 
       </div>
       
-      <div id="filter" class="filter"></div>
+      
       <div id="preview" class="preview"></div>
       
       <div id="list-container" class="list-container">
@@ -33,6 +33,8 @@
           <input id="search-field" class="search__field" type="text" placeholder="Hae nimellä"></input>
         </div>
         <div id="list" class="list"></div>
+        <button id="toggle-filter" class="toggle-filter js-filter__button">Suodata</button>
+        <div id="filter" class="filter"></div>
       </div>
     </div>
     

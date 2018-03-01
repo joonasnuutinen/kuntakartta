@@ -342,6 +342,10 @@ a:visited {
   display: table;
 }
 
+.target--hidden {
+  display: none;
+}
+
 .target__additional-content {
   clear: both;
   display: none;

@@ -12,8 +12,27 @@ const FA = {
   'Kaupat ja myymälät': 'fas fa-shopping-cart'
 };
 
+var Search = {
+  init: function($searchField, list, map) {
+    this.$searchField = $searchField;
+    this.list = list;
+    this.map = map;
+    
+    this.$searchField.on( 'input', function searchFieldInput() {
+      var searchTerm = $( this ).val();
+      //console.log( searchTerm );
+      
+      list.filterBySearchTerm( searchTerm );
+    } );
+  },
+  
+  clear: function() {
+    this.$searchField.val( '' );
+  }
+};
+
 var Filter = {
-  init: function( $target, map ) {
+  init: function( $target, map, search ) {
     var t = this;
     
     t.optionList = $( '<ul>' )
@@ -21,13 +40,19 @@ var Filter = {
       .appendTo( $target );
     
     $( '#toggle-filter' )
-      .click( function filterButtonClicked() {
+      .click( function filterButtonClicked(e) {
+        e.stopPropagation();
         $( '#filter' ).slideToggle();
       } );
+    
+    $target.click( function preventBubbling(e) {
+      e.stopPropagation();
+    } );
     
     t.target = $target;
     t.map = map;
     t.options = [];
+    this.search = search;
   },
   
   toggleOptions: function() {
@@ -58,6 +83,7 @@ var Filter = {
         if ( showAll ) {
           this.map.showAllTargets();
           this.list.showAllTargets();
+          this.search.clear();
         } else {
           var pos = ol.proj.fromLonLat( INIT_CENTER );
           this.map.showTargetsByBranch( optionName );
@@ -206,7 +232,6 @@ var Map = {
     this.map.on( 'click', function mapClicked() {
       t.preview.hide( true );
       t.resetActiveTargets();
-      $( '#filter' ).hide( 0 );
     } );
     
     t.target = $( '#' + target );
@@ -458,15 +483,33 @@ var List = {
   },
   
   showAllTargets: function() {
-    $( '#list' ).find( '.target' ).show();
+    $( '#list' ).find( '.target' ).removeClass( 'target--hidden js-hidden-by-filter' );
   },
   
   showTargetsByBranch: function(branch) {
     $( '#list' ).find( '.target' ).each( function eachTarget() {
       if ( $( this ).attr( 'data-branch' ) == branch ) {
-        $( this ).show();
+        $( this ).removeClass( 'target--hidden js-hidden-by-filter' );
       } else {
-        $( this ).hide();
+        $( this ).addClass( 'target--hidden js-hidden-by-filter' );
+      }
+    } );
+  },
+  
+  filterBySearchTerm: function(searchTerm) {
+    $( '#list' ).find( '.target' ).each( function filterTargetBySearchTerm() {
+      var $this = $( this );
+      
+      var pattern = new RegExp( searchTerm, 'i' );
+      
+      if ( $this.hasClass( 'js-hidden-by-filter' ) ) {
+        return;
+      }
+      
+      if ( $this.find( '.name' ).text().search( pattern ) == -1 ) {
+        $this.addClass( 'target--hidden js-hidden-by-search' );
+      } else {
+        $this.removeClass( 'target--hidden js-hidden-by-search' );
       }
     } );
   }
@@ -489,11 +532,13 @@ $(function documentReady() {
     var filter = Object.create( Filter );
     var listObject = Object.create( List );
     var preview = Object.create( Preview );
+    var search = Object.create( Search );
     
     map.init( INIT_CENTER, INIT_ZOOM, 'map-div' );
-    filter.init( $( '#filter' ), map );
+    filter.init( $( '#filter' ), map, search );
     listObject.init();
     preview.init( $( '#preview' ) );
+    search.init( $( '#search-field' ), listObject, map );
     
     map.connectList( listObject );
     map.connectPreviewArea( preview );
@@ -680,4 +725,8 @@ function mapEvents(listObject, mapWindow) {
     var targetId = '#event-target-' + $( this ).attr( 'data-event-target' );
     $( targetId ).removeClass( 'hover' );
   }); // #map-div on mouseout
+  
+  $( '#app' ).click( function appClicked() {
+    $( '#filter' ).hide();
+  } );
 }
