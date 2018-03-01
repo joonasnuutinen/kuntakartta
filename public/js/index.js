@@ -77,22 +77,10 @@ var Filter = {
       .text( optionName )
       .prepend( $icon )
       .click( $.proxy( function optionClicked() {
-        $( '.filter__option' ).removeClass( 'filter__option--selected' );
-        $( '#toggle-filter' ).removeClass( 'toggle-filter--filtered' );
-        $( '#filter' ).hide();
         if ( showAll ) {
-          this.map.showAllTargets();
-          this.list.showAllTargets();
-          this.search.clear();
+          this.resetFilter();
         } else {
-          var pos = ol.proj.fromLonLat( INIT_CENTER );
-          this.map.showTargetsByBranch( optionName );
-          this.list.showTargetsByBranch( optionName );
-          this.map.map.getView().animate( { zoom: INIT_ZOOM, center: pos, duration: ANIMATION_SPEED } );
-          this.map.preview.hide();
-          this.map.resetActiveTargets();
-          $option.addClass( 'filter__option--selected' );
-          $( '#toggle-filter' ).addClass( 'toggle-filter--filtered' );
+          this.filterByBranch( $option );
         }
       }, this ) );
     
@@ -112,6 +100,33 @@ var Filter = {
   
   connectList: function(list) {
     this.list = list;
+  },
+  
+  resetFilter: function() {
+    this.resetFilterView();
+    this.map.showAllTargets();
+    this.list.showAllTargets();
+    this.search.clear();
+  },
+  
+  resetFilterView: function() {
+    $( '.filter__option' ).removeClass( 'filter__option--selected' );
+    $( '#toggle-filter' ).removeClass( 'toggle-filter--filtered' );
+    $( '#filter' ).hide();
+  },
+  
+  filterByBranch: function($option) {
+    var pos = ol.proj.fromLonLat( INIT_CENTER );
+    var branch = $option.text();
+    
+    this.resetFilterView();
+    this.map.showTargetsByBranch( branch );
+    this.list.showTargetsByBranch( branch );
+    this.map.map.getView().animate( { zoom: INIT_ZOOM, center: pos, duration: ANIMATION_SPEED } );
+    this.map.preview.hide();
+    this.map.resetActiveTargets();
+    $option.addClass( 'filter__option--selected' );
+    $( '#toggle-filter' ).addClass( 'toggle-filter--filtered' );
   }
 };
 
