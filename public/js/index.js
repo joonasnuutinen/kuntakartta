@@ -11,18 +11,23 @@ const FA = {
   'Museot ja nähtävyydet': 'fas fa-paint-brush',
   'Kaupat ja myymälät': 'fas fa-shopping-cart'
 };
+const TWO_COLUMN_BREAKPOINT = 640;
 
 var Search = {
-  init: function($searchField, list, map) {
+  init: function($searchField, list, map, filter) {
     this.$searchField = $searchField;
     this.list = list;
     this.map = map;
+    this.filter = filter;
     
     this.$searchField.on( 'input', function searchFieldInput() {
       var searchTerm = $( this ).val();
-      //console.log( searchTerm );
+      filter.resetFilter();
+      list.hideAdditionalContent();
       
-      list.filterBySearchTerm( searchTerm );
+      var matchingIndexes = list.filterBySearchTerm( searchTerm );
+      
+      map.filterByIndexes( matchingIndexes );
     } );
   },
   
@@ -77,6 +82,9 @@ var Filter = {
       .text( optionName )
       .prepend( $icon )
       .click( $.proxy( function optionClicked() {
+        this.search.clear();
+        this.list.hideAdditionalContent();
+        
         if ( showAll ) {
           this.resetFilter();
         } else {
@@ -106,7 +114,6 @@ var Filter = {
     this.resetFilterView();
     this.map.showAllTargets();
     this.list.showAllTargets();
-    this.search.clear();
   },
   
   resetFilterView: function() {
@@ -188,17 +195,15 @@ var Preview = {
   
   expand: function() {
     var $preview = this.target;
-    var $additionalContent = $preview.find( '.js-additional-content' ).hide( 0 );
+    var $additionalContent = $preview.find( '.js-additional-content' ).hide();
     
-    var expandedHeight = $preview.outerHeight() + $additionalContent.outerHeight() + 1;
-    
-    $additionalContent.show( 0 );
+    $additionalContent.show();
 
     $preview
       .addClass( 'preview--resizing preview--expanding' )
       .removeClass( 'preview--small' )
       .animate( {
-        height: expandedHeight
+        height: '100%'
       }, ANIMATION_SPEED, function previewExpanded() {
         $( this ).addClass( 'preview--expanded' );
         $( this ).removeClass( 'preview--resizing preview--expanding' );
@@ -224,6 +229,8 @@ var Preview = {
           t.previewHeight = 0;
         }
       } );
+    
+    
   }
 };
 
@@ -246,6 +253,7 @@ var Map = {
     
     this.map.on( 'click', function mapClicked() {
       t.preview.hide( true );
+      t.listObject.hideAdditionalContent();
       t.resetActiveTargets();
     } );
     
@@ -269,13 +277,9 @@ var Map = {
         'data-branch': targetObject.branch
       } )
       .html( targetHtml )
-      .click( function mapTargetClicked(e, disableScroll) {
+      .click( function mapTargetClicked(e, clickedFromList) {
         var $listTarget = $( '#target-' + index );
         var $additionalContent = t.listObject.targets[index - 1][0].additionalContent();
-
-        if ( ! disableScroll ) {
-          t.listObject.scrollTo( index );
-        }
         
         t.map.getView().animate( { zoom: inZoom, center: pos, duration: ANIMATION_SPEED } );
         
@@ -283,11 +287,42 @@ var Map = {
         $( this ).addClass( 'active' );
         $listTarget.addClass( 'active' );
         
-        t.preview.create( $listTarget, $additionalContent );
-        t.preview.show();
-        
-        t.listObject.hideList();
-        $( '#filter' ).hide( 0 );
+        if ( $( window ).width() < TWO_COLUMN_BREAKPOINT ) {
+          // One column view: show preview at the bottom
+          if ( ! clickedFromList ) {
+            t.listObject.scrollTo( index );
+          }
+          t.preview.create( $listTarget, $additionalContent );
+          t.preview.show();
+          t.listObject.hideList();
+        } else {
+          // Two column view: show additional content in List
+          if ( $listTarget.hasClass( 'js-expanded' ) ) {
+            // Hide and remove additional content
+            $listTarget.removeClass( 'target--expanded js-expanded' );
+            
+            $listTarget.find( '.js-additional-content' ).slideUp( ANIMATION_SPEED, function slideDone() {
+              $( this ).remove();
+            } );
+          } else {
+            // Show additional content
+            
+            $( '.js-additional-content' ).remove();
+            $( '.target' ).removeClass( 'target--expanded js-expanded' );
+            
+            $listTarget
+              .addClass( 'target--expanded js-expanded' )
+              .append( $additionalContent )
+            
+            if ( clickedFromList ) {
+              $additionalContent.slideDown( ANIMATION_SPEED );
+            } else {
+              $additionalContent.show();
+            }
+            
+            t.listObject.scrollTo( index );
+          }
+        }
       } )
       .get( 0 );
     
@@ -317,7 +352,7 @@ var Map = {
       .text( eventTargetObject.name )
       .click( function mapEventTargetClicked(e, disableScroll) {
         if ( ! disableScroll ) {
-          t.listObject.scrollTo( index, true );
+          t.listObject.scrollTo( index );
         }
         t.map.getView().animate( { zoom: inZoom, center: pos, duration: ANIMATION_SPEED } );
         
@@ -366,12 +401,22 @@ var Map = {
         $( this ).hide();
       }
     } );
+  },
+  
+  filterByIndexes: function(indexes) {
+    var $map = this.target;
+    this.hideAllTargets();
+    
+    indexes.forEach( function(index) {
+      $map.find( '#map-target-' + index ).show();
+    } );
   }
 };
 
 var List = {
-  init: function() {
+  init: function(map) {
     var t = this;
+    this.map = map;
     
     this.targets = [];
     this.eTargs = [];
@@ -459,7 +504,9 @@ var List = {
       } )
       .animate( {
         right: 0
-      }, ANIMATION_SPEED );
+      }, ANIMATION_SPEED, function animationDone() {
+        $( this ).addClass( 'list-container--expanded' );
+      } );
     
     // Change button state and icon
     $( '#toggle-list' )
@@ -478,10 +525,12 @@ var List = {
       .animate( {
         right: - listContainerWidth
       }, ANIMATION_SPEED, function animationDone() {
-        $( this ).css( {
-          right: '',
-          visibility: ''
-        } );
+        $( this )
+          .removeClass( 'list-container--expanded' )
+          .css( {
+            right: '',
+            visibility: ''
+          } );
       } );
     
     // Change button state and icon
@@ -512,9 +561,11 @@ var List = {
   },
   
   filterBySearchTerm: function(searchTerm) {
+    var matchingIndexes = [];
+    
     $( '#list' ).find( '.target' ).each( function filterTargetBySearchTerm() {
       var $this = $( this );
-      
+      var index = $this.attr( 'data-target' );
       var pattern = new RegExp( searchTerm, 'i' );
       
       if ( $this.hasClass( 'js-hidden-by-filter' ) ) {
@@ -525,8 +576,16 @@ var List = {
         $this.addClass( 'target--hidden js-hidden-by-search' );
       } else {
         $this.removeClass( 'target--hidden js-hidden-by-search' );
+        matchingIndexes.push( index );
       }
     } );
+    
+    return matchingIndexes;
+  },
+  
+  hideAdditionalContent: function() {
+    $( '.js-additional-content' ).slideUp( ANIMATION_SPEED );
+    $( '.target' ).removeClass( 'target--expanded js-expanded' );
   }
 }
 
@@ -551,9 +610,9 @@ $(function documentReady() {
     
     map.init( INIT_CENTER, INIT_ZOOM, 'map-div' );
     filter.init( $( '#filter' ), map, search );
-    listObject.init();
+    listObject.init( map );
     preview.init( $( '#preview' ) );
-    search.init( $( '#search-field' ), listObject, map );
+    search.init( $( '#search-field' ), listObject, map, filter );
     
     map.connectList( listObject );
     map.connectPreviewArea( preview );
@@ -630,7 +689,7 @@ function Target(targetObject) {
   this.targetHtml = function() {
     var subClass = (this.sub) ? ' sub' : '';
     var urlObject = filterUrl( this.url );
-    var html = '<div class="list-text-container' + subClass + '"><h3 class="name">' + this.name + '</h3><p><span class="phone">' + this.phone + '</span>';
+    var html = '<div class="list-text-container' + subClass + '"><h3 class="name">' + this.name + '</h3><p class="target__info"><span class="phone">' + this.phone + '</span>';
 
     html += this.itemHtml(this.address, 'span', {
       class: 'address'
