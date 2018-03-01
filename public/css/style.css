@@ -314,6 +314,7 @@ a:visited {
 .map .index {
   position: absolute;
   /*margin: -9px 0 0 -9px;*/
+  transform: translate(-50%, -50%);
 }
 
 .circle {
