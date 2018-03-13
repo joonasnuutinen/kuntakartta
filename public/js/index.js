@@ -8,9 +8,12 @@ const INIT_CENTER = [30.9327, 62.6716];
 const FA = {
   'Terveys ja liikunta': 'fas fa-heart',
   'Ravintolat ja kahvilat': 'fas fa-utensils',
-  'Museot ja nähtävyydet': 'fas fa-paint-brush',
+  'Museot ja nähtävyydet': null,
   'Kaupat ja myymälät': 'fas fa-shopping-cart'
 };
+const UNICODE = {
+  'Museot ja nähtävyydet': '&#8984;'
+}
 const TWO_COLUMN_BREAKPOINT = 640;
 
 var Search = {
@@ -72,10 +75,11 @@ var Filter = {
   
   createOptionElement: function( optionName, showAll ) {
     var faClass = FA[optionName] || '';
+    var symbolHtml = ( faClass ) ? '<i class="' + faClass + '"></i>' : UNICODE[optionName];
     
     var $icon = $( '<span>' )
       .addClass( 'filter__icon' )
-      .html( '<i class="' + faClass + '"></i>' );
+      .html( symbolHtml );
     
     var $option = $( '<li>' )
       .addClass( 'filter__option' )
@@ -267,7 +271,8 @@ var Map = {
     var pos = ol.proj.fromLonLat( position );
     var markerId = 'map-target-' + index;
     var t = this;
-    var targetHtml = '<i class="' + FA[targetObject.branch] + '"></i>';
+    var faClass = FA[targetObject.branch];
+    var targetHtml = ( faClass ) ? '<i class="' + faClass + '"></i>' : UNICODE[targetObject.branch];
     
     var targetElement = $( '<div>' )
       .addClass( 'index map-index' )
@@ -467,7 +472,7 @@ var List = {
     
     $.each(targs, function(key, val) {
       var i = key + 1;
-      html += '<div class="target" id="target-' + i + '" data-target="' + i + '" data-branch="' + val[0].branch + '"><div class="list-index-container"><div class="index"><i class="' + val[0].faClass + '"></i></div></div><!-- .list-index-container -->';
+      html += '<div class="target" id="target-' + i + '" data-target="' + i + '" data-branch="' + val[0].branch + '"><div class="list-index-container"><div class="index">' + val[0].symbolHtml + '</div></div><!-- .list-index-container -->';
       $.each(val, function(key2, val2) {
         html += val2.targetHtml();
       });
@@ -669,6 +674,7 @@ function Target(targetObject) {
   this.index = targetObject.index || null;
   this.faClass = FA[targetObject.branch] || null;
   this.branch = targetObject.branch;
+  this.symbolHtml = ( this.faClass ) ? '<i class="' + this.faClass + '"></i>' : UNICODE[targetObject.branch];
   var t = this;
 
   this.itemHtml = function(value, type, attributes) {
