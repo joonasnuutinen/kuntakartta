@@ -9,8 +9,9 @@
   bottom: .5em;
   left: 50%;
   transform: translate( -50%, 0 );
-  background: #fff8c8;
-  border: 1px solid #bbb;
+  color: white;
+  background: #eb1c26;
+  border: none;
   font: inherit;
   padding: .25em .5em;
   cursor: pointer;
@@ -36,7 +37,6 @@
 }
 
 .toggle-filter--filtered {
-  background: #ffee7d;
 }
 
 .filter__list {
