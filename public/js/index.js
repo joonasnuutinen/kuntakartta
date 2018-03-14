@@ -83,7 +83,7 @@ var Filter = {
     
     var $option = $( '<li>' )
       .addClass( 'filter__option' )
-      .text( optionName )
+      .html( '<span class="filter__name">' + optionName + '</span>' )
       .prepend( $icon )
       .click( $.proxy( function optionClicked() {
         this.search.clear();
@@ -128,7 +128,8 @@ var Filter = {
   
   filterByBranch: function($option) {
     var pos = ol.proj.fromLonLat( INIT_CENTER );
-    var branch = $option.text();
+    var branch = $option.find( '.filter__name' ).text();
+    console.log(branch);
     
     this.resetFilterView();
     this.map.showTargetsByBranch( branch );
