@@ -404,7 +404,9 @@ a:visited {
   bottom: 0;
   left: 50%;
   transform: translateX(-50%);
-  width: 230px;
+  width: 236px;
+  background: white;
+  padding: 3px;
 }
 
 /*.list {
