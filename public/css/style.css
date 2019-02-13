@@ -399,6 +399,16 @@ a:visited {
   top: auto;
 }
 
+.eu {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 236px;
+  background: white;
+  padding: 3px;
+}
+
 /*.list {
   width: 95%;
   margin: 0 auto;
