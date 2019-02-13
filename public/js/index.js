@@ -1,10 +1,3 @@
-import Map from 'o1/Map';
-import View from 'o1/View';
-import Tile from 'o1/layer/Tile';
-import OSM from 'o1/source/OSM';
-import fromLonLat from 'o1/proj/fromLonLat';
-import Overlay from 'o1/Overlay';
-
 var ANIMATION_SPEED = 700;
 var IN_ZOOM = {
   keskusta: 16,
@@ -13,15 +6,15 @@ var IN_ZOOM = {
 
 var Map = {
   init: function(center, zoom, target) {
-    this.map = new Map( {
+    this.map = new ol.Map( {
       target: target,
       layers: [
-        new Tile( {
-          source: new OSM()
+        new ol.layer.Tile( {
+          source: new ol.source.OSM()
         } )
       ],
-      view: new View( {
-        center: fromLonLat( center ),
+      view: new ol.View( {
+        center: ol.proj.fromLonLat( center ),
         zoom: zoom
       } ),
       loadTilesWhileAnimating: false
@@ -29,7 +22,7 @@ var Map = {
   },
   
   addTarget: function(index, position, inZoom) {
-    var pos = fromLonLat( position );
+    var pos = ol.proj.fromLonLat( position );
     var markerId = 'map-target-' + index;
     var t = this;
     
@@ -53,7 +46,7 @@ var Map = {
       } )
       .get( 0 );
     
-    var marker = new Overlay( {
+    var marker = new ol.Overlay( {
       position: pos,
       positioning: 'center-center',
       element: targetElement,
@@ -66,7 +59,7 @@ var Map = {
     var index = eventTargetObject.index;
     var position = eventTargetObject.location.slice();
     position.push( position.shift() );
-    var pos = fromLonLat( position );
+    var pos = ol.proj.fromLonLat( position );
     var markerId = 'map-event-target-' + index;
     var t = this;
     
